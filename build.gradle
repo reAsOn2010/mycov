@@ -1,0 +1,71 @@
+apply plugin: 'java'
+apply plugin: 'kotlin'
+apply plugin: 'kotlin-allopen'
+apply plugin: 'kotlin-spring'
+apply plugin: 'idea'
+apply plugin: 'org.springframework.boot'
+apply plugin: 'jacoco'
+
+group 'com.github.reAsOn2010'
+version '1.0'
+
+repositories {
+    mavenCentral()
+}
+
+buildscript {
+    ext {
+        kotlinVersion = '1.2.50'
+        springBootVersion = '1.5.14.RELEASE'
+    }
+    repositories {
+        maven {
+            url "http://mvn.pat-edu.org/artifactory/mavencentral/"
+        }
+        maven {
+            url "http://mvn.pat-edu.org/artifactory/jcenter/"
+        }
+        maven {
+            url "http://mvn.pat-edu.org/artifactory/gradle-plugin/"
+        }
+    }
+    dependencies {
+        classpath "org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${kotlinVersion}"
+        classpath "org.jetbrains.kotlin:kotlin-allopen:${kotlinVersion}"
+        classpath 'com.moowork.gradle:gradle-node-plugin:1.2.0'
+    }
+}
+
+repositories {
+    maven {
+        url "http://mvn.pat-edu.org/artifactory/mavencentral/"
+    }
+    maven {
+        url "http://mvn.pat-edu.org/artifactory/jcenter/"
+    }
+    maven {
+        url "http://mvn.pat-edu.org/artifactory/pat/"
+    }
+    maven {
+        url "http://mvn.pat-edu.org/artifactory/jitpack/"
+    }
+}
+
+dependencies {
+    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+    compile "org.springframework.boot:spring-boot-starter:${springBootVersion}"
+    compile "org.springframework.boot:spring-boot-starter-web:${springBootVersion}"
+
+    compile "org.dom4j:dom4j:2.1.0"
+    compile "com.squareup.okhttp3:okhttp:3.10.0"
+    compile group: 'org.json', name: 'json', version: '20180130'
+
+}
+
+compileKotlin {
+    kotlinOptions.jvmTarget = "1.8"
+}
+compileTestKotlin {
+    kotlinOptions.jvmTarget = "1.8"
+}
