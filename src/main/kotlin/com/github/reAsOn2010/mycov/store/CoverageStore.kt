@@ -1,36 +1,142 @@
 package com.github.reAsOn2010.mycov.store
 
 import com.github.reAsOn2010.mycov.controller.ReportController.*
-import org.dom4j.Document
+import com.github.reAsOn2010.mycov.model.*
+import org.dom4j.*
 import org.springframework.stereotype.Component
 
 @Component
 class CoverageStore {
 
-    private val maps: Map<String, CoverageEntry> = emptyMap()
+    private val maps: MutableMap<String, CoverageRepo> = mutableMapOf()
 
-    class CoverageEntry(
-        private val gitType: GitType,
-        private val reportType: ReportType
-    ) {
-        private val targetRecord: CoverageRecord = CoverageRecord()
-        private val diffs: Map<String, CoverageRecord> = emptyMap()
+    fun diff(repoName: String, commit: String): CoverageDiffReport {
+        val entry = maps[repoName] ?: throw RuntimeException("Coverage entry not found.")
+        val target = entry.targetRecord!!
+        val targetOverview = target.commitOverview
+        val current = entry.diffs[commit]!!
+        val currentOverview = current.commitOverview
+        return CoverageDiffReport(
+            coverages = DiffTuple(calculateCoverage(targetOverview.line),
+                calculateCoverage(currentOverview.line)),
+            complexity = DiffTuple(calculateSum(targetOverview.complexity),
+                calculateSum(currentOverview.complexity)),
+            files = DiffTuple(target.coverageFileMap.size,
+                current.coverageFileMap.size),
+            lines = DiffTuple(calculateSum(targetOverview.line),
+                calculateSum(currentOverview.line)),
+            branches = DiffTuple(calculateSum(targetOverview.branch),
+                calculateSum(currentOverview.branch)),
+            hits = DiffTuple(targetOverview.line.covered,
+                currentOverview.line.covered),
+            misses = DiffTuple(targetOverview.line.missed,
+                currentOverview.line.missed),
+            partials = DiffTuple(targetOverview.line.partial,
+                currentOverview.line.partial)
+        )
     }
 
-    class CoverageRecord {
-        private val files: Map<String, List<CoverageTuple>> = emptyMap()
+    private fun calculateCoverage(line: OverviewTuple): Int {
+        val result = line.covered.toFloat() * 10000 / (line.covered + line.partial + line.missed)
+        return Math.round(result)
     }
 
-    data class CoverageTuple (
-        val lineNumber: Int,
-        val missedInstructions: Int,
-        val coveredInstructions: Int,
-        val missedBranches: Int,
-        val coveredBranches: Int
-    )
+    private fun calculateSum(line: OverviewTuple): Int {
+        return line.covered + line.partial + line.missed
+    }
 
-    fun store(gitType: GitType, repoName: String, reportType: ReportType, commit: String, isTarget: Boolean, report: Document) {
+    fun store(gitType: GitType,
+              repoName: String,
+              reportType: ReportType,
+              commit: String,
+              isTarget: Boolean,
+              report: Document) {
+        val entry = maps[repoName] ?: {
+            val tmp = CoverageRepo(repoName, gitType, reportType)
+            maps[repoName] = tmp
+            tmp
+        }()
+        if (entry.gitType != gitType || entry.reportType != reportType) {
+            throw RuntimeException("Unmatched git type or report type.")
+        }
+        val root = report.rootElement
+        /*
+        root.elements("counter").map {
+            val tuple = OverviewTuple(it.attributeValue("missed").toInt(),
+                it.attributeValue("covered").toInt())
+            when (it.attributeValue("type")) {
+                "INSTRUCTION" -> overview.instruction = tuple
+                "BRANCH" -> overview.branch = tuple
+                "LINE" -> overview.line = tuple
+                "COMPLEXITY" -> overview.complexity = tuple
+                "METHOD" -> overview.method = tuple
+                "CLASS" -> overview.class_ = tuple
+            }
+        }
+        */
+        val fileMaps = root.elements("package").map {
+            iterPackageElement(it)
+        }
+        val coverageFileMap = fileMaps.reduce { a, b -> a + b }
+        val overview = fileMaps.flatMap { it.values.map { it.fileOverview } }.reduce { a, b -> a + b }
+        if (isTarget) {
+            entry.targetRecord = CoverageCommit(overview, coverageFileMap)
+        } else {
+            entry.diffs[commit] = CoverageCommit(overview, coverageFileMap)
+        }
+    }
 
+    fun iterPackageElement(root: Element): Map<String, CoverageFile> {
+        val packageName = root.attributeValue("name")
+        return root.elements().mapNotNull {
+            val fileName = it.attributeValue("name")
+            val fullFileName = "$packageName/$fileName"
+            when (it.qualifiedName) {
+                "counter" -> null
+                "class" -> null
+                "sourcefile" -> {
+                    val (overview, tuples) = iterSourceFile(it)
+                     fullFileName to CoverageFile(fullFileName, overview, tuples)
+                }
+                else -> throw RuntimeException("No such type of element.")
+            }
+        }.toMap()
+    }
+
+    fun iterSourceFile(root: Element): Pair<CoverageOverview, List<CoverageFileTuple>> {
+        val fileOverview = CoverageOverview()
+        root.elements("counter").map {
+            val tuple = OverviewTuple(it.attributeValue("missed").toInt(), 0,
+                it.attributeValue("covered").toInt())
+            when (it.attributeValue("type")) {
+                "INSTRUCTION" -> fileOverview.instruction = tuple
+                "BRANCH" -> fileOverview.branch = tuple
+                "LINE" -> fileOverview.line = tuple
+                "COMPLEXITY" -> fileOverview.complexity = tuple
+                "METHOD" -> fileOverview.method = tuple
+                "CLASS" -> fileOverview.class_ = tuple
+            }
+        }
+        val tuples = root.elements("line").map{
+            buildCoverageTuple(it)
+        }
+        // We consider partial covered as partial but not covered
+        val covered = tuples.sumBy { if (it.missedBranches == 0 && it.missedInstructions == 0) 1 else 0}
+        val partial = tuples.sumBy {
+            if (it.coveredBranches > 0 && it.missedBranches > 0) 1 else 0
+        }
+        val missed = tuples.sumBy { if (it.coveredInstructions == 0 && it.coveredBranches == 0) 1 else 0 }
+        assert(missed + partial + covered == tuples.size)
+        fileOverview.line = OverviewTuple(missed, partial, covered)
+        return fileOverview to tuples
+    }
+
+    fun buildCoverageTuple(element: Element): CoverageFileTuple {
+        return CoverageFileTuple(lineNumber = element.attributeValue("nr").toInt(),
+            missedInstructions = element.attributeValue("mi").toInt(),
+            coveredInstructions = element.attributeValue("ci").toInt(),
+            missedBranches = element.attributeValue("mb").toInt(),
+            coveredBranches = element.attributeValue("cb").toInt())
     }
 
 }
