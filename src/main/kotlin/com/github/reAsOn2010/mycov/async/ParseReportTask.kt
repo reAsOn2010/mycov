@@ -1,6 +1,6 @@
 package com.github.reAsOn2010.mycov.async
 
-import com.github.reAsOn2010.mycov.controller.ReportController.*
+import com.github.reAsOn2010.mycov.model.*
 import com.github.reAsOn2010.mycov.store.CoverageStore
 import com.github.reAsOn2010.mycov.util.GitHubUtil
 import org.dom4j.Document
@@ -16,14 +16,14 @@ class ParseReportTask(private val coverageStore: CoverageStore,
                 repo: String,
                 commit: String,
                 reportType: ReportType,
-                document: Document,
-                branch: String?,
-                pullRequestNumber: Int?): CompletableFuture<Void> {
+                document: Document): CompletableFuture<Void> {
         // get protected branch
         val isTarget = gitHubUtil.isCommitOnTargetBranch(owner, repo, "master", commit)
         coverageStore.store(gitType, "$owner/$repo", reportType, commit, isTarget, document)
         if (!isTarget) {
             val diff = coverageStore.diff("$owner/$repo", commit)
+            val (baseBranch, pullRequestNumber) = gitHubUtil.getPullRequestBaseAndNumber(owner, repo, commit)
+            gitHubUtil.commentCoverageReport(owner, repo, baseBranch, pullRequestNumber, diff)
         }
         return CompletableFuture.completedFuture(null)
     }

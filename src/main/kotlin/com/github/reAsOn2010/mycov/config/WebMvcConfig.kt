@@ -1,6 +1,6 @@
 package com.github.reAsOn2010.mycov.config
 
-import com.github.reAsOn2010.mycov.controller.ReportController.*
+import com.github.reAsOn2010.mycov.model.*
 import org.dom4j.Document
 import org.dom4j.io.SAXReader
 import org.springframework.context.annotation.Configuration

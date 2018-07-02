@@ -1,0 +1,2 @@
+curl -v -XPOST http://localhost:8080/report/github/pintia/offline-PTA/2e6a303/jacoco -H "Content-Type: text/xml" --data "@./jacocoTestReport-pr.xml"
+curl -v -XPOST http://localhost:8080/report/github/pintia/offline-PTA/e3a2a8e/jacoco -H "Content-Type: text/xml" --data "@./jacocoTestReport-master.xml"

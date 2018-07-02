@@ -1,6 +1,5 @@
 package com.github.reAsOn2010.mycov.store
 
-import com.github.reAsOn2010.mycov.controller.ReportController.*
 import com.github.reAsOn2010.mycov.model.*
 import org.dom4j.*
 import org.springframework.stereotype.Component
@@ -9,6 +8,27 @@ import org.springframework.stereotype.Component
 class CoverageStore {
 
     private val maps: MutableMap<String, CoverageRepo> = mutableMapOf()
+
+    fun getCoveragesForFiles(repoName: String,
+                             commit: String,
+                             files: List<String>): Pair<Map<String, CoverageFile>, Map<String, CoverageFile>> {
+        val entry = maps[repoName] ?: throw RuntimeException("Coverage entry not found.")
+        return entry.targetRecord!!.coverageFileMap.mapNotNull { jacocoFile ->
+            val changedFile = files.firstOrNull { it.contains(jacocoFile.key) }
+            if (changedFile == null) {
+                null
+            } else {
+                changedFile to jacocoFile.value
+            }
+        }.toMap() to entry.diffs[commit]!!.coverageFileMap.mapNotNull { jacocoFile ->
+            val changedFile = files.firstOrNull { it.contains(jacocoFile.key) }
+            if (changedFile == null) {
+                null
+            } else {
+                changedFile to jacocoFile.value
+            }
+        }.toMap()
+    }
 
     fun diff(repoName: String, commit: String): CoverageDiffReport {
         val entry = maps[repoName] ?: throw RuntimeException("Coverage entry not found.")

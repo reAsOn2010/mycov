@@ -6,4 +6,14 @@ data class CoverageFileTuple (
     val coveredInstructions: Int,
     val missedBranches: Int,
     val coveredBranches: Int
-)
+) {
+    fun toSimple(): SimpleTuple {
+        return SimpleTuple(
+            lineNumber,
+            missedInstructions,
+            coveredInstructions,
+            missedBranches,
+            coveredBranches
+        )
+    }
+}
