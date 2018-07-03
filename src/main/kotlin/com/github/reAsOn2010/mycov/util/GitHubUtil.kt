@@ -1,17 +1,19 @@
 package com.github.reAsOn2010.mycov.util
 
+import com.github.reAsOn2010.mycov.config.WebSiteConfig
 import com.github.reAsOn2010.mycov.model.GitType
 import com.github.reAsOn2010.mycov.model.*
+import com.google.gson.JsonObject
 import okhttp3.*
 import org.json.*
 import org.springframework.stereotype.Component
 
 @Component
-class GitHubUtil {
+class GitHubUtil() {
     companion object {
         val client = OkHttpClient()
         val authenticatedBuilder get() = Request.Builder()
-            .addHeader("Authorization", "token ***")
+            .addHeader("Authorization", "token 4bcf119f9299b4613089e19e23043ab9b133e746")
         val prefix = "MyCov coverage report"
         val JSON = MediaType.parse("application/json; charset=utf-8")
     }
@@ -39,6 +41,18 @@ class GitHubUtil {
         return baseBranch to pullRequestNumber
     }
 
+    fun getPullRequestBaseAndHead(owner: String, repo: String, pullRequestNumber: Int): Pair<String, String> {
+        val request = authenticatedBuilder
+            .url("https://api.github.com/repos/$owner/$repo/pulls/$pullRequestNumber").build()
+        val response = client.newCall(request).execute()
+        val body = response.body()!!.string()
+
+        val json = JSONObject(body)
+        val base = json.getJSONObject("base") ?.getString("ref") ?: "unknown"
+        val head = json.getJSONObject("head") ?.getString("sha") ?.substring(0, 7) ?: "0000000"
+        return base to head
+    }
+
     fun getDiffOfCommit(owner: String, repo: String, targetBranch: String, sha: String): Pair<List<String>, String> {
         val diffRequest = authenticatedBuilder
             .addHeader("Accept", "application/vnd.github.v3.diff")
@@ -59,7 +73,7 @@ class GitHubUtil {
         val body = response.body()!!.string()
         val json = JSONArray(body).map { it as JSONObject }
         val original = json.firstOrNull { it.getString("body").startsWith(prefix) }
-        val comment = buildReportContent(branch, pullRequestNumber, report)
+        val comment = buildReportContent(owner, repo, branch, pullRequestNumber, report)
         if (original == null) {
             val createRequest = authenticatedBuilder
                 .post(RequestBody.create(JSON, JSONObject().put("body", comment).toString()))
@@ -73,7 +87,7 @@ class GitHubUtil {
         }
     }
 
-    fun buildReportContent(branch: String, pullRequestNumber: Int, report: CoverageDiffReport): String {
+    fun buildReportContent(owner: String, repo: String, branch: String, pullRequestNumber: Int, report: CoverageDiffReport): String {
         val lines = listOf(
             listOf("@@", "", "Coverage", "Diff", "", "@@"),
             listOf("##", "", "$branch", "#$pullRequestNumber", "+/-", "##"),
@@ -106,6 +120,7 @@ class GitHubUtil {
         }
         return """
 $prefix
+[Link](${WebSiteConfig.url}/view/github/$owner/$repo/$pullRequestNumber)
 
 ```diff
 ${withPaddding.joinToString("\n")}
@@ -144,11 +159,4 @@ ${withPaddding.joinToString("\n")}
         )
     }
 
-}
-
-fun main(args: Array<String>) {
-    val util = GitHubUtil()
-    GitType.valueOf("GITHUB")
-    // println(util.getPullRequestBaseAndNumber("pintia", "offline-PTA", "2e6a303"))
-    // println(util.isCommitOnTargetBranch("pintia", "offline-PTA", "master", "714060a"))
 }

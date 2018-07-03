@@ -145,7 +145,7 @@ class CoverageStore {
         val partial = tuples.sumBy {
             if (it.coveredBranches > 0 && it.missedBranches > 0) 1 else 0
         }
-        val missed = tuples.sumBy { if (it.coveredInstructions == 0 && it.coveredBranches == 0) 1 else 0 }
+        val missed = tuples.size - covered - partial // tuples.sumBy { if (it.coveredInstructions == 0 && it.coveredBranches == 0) 1 else 0 }
         assert(missed + partial + covered == tuples.size)
         fileOverview.line = OverviewTuple(missed, partial, covered)
         return fileOverview to tuples
