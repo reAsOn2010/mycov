@@ -1,0 +1,11 @@
+spring:
+  profiles:
+    active: dev
+---
+spring:
+  profiles: dev
+
+token:
+  github-access-token: ***
+website:
+  url: https://mycov.pat-edu.com
