@@ -1,6 +1,6 @@
 package com.github.reAsOn2010.mycov.util
 
-import com.github.reAsOn2010.mycov.config.WebSiteConfig
+import com.github.reAsOn2010.mycov.config.*
 import com.github.reAsOn2010.mycov.model.GitType
 import com.github.reAsOn2010.mycov.model.*
 import com.google.gson.JsonObject
@@ -13,7 +13,7 @@ class GitHubUtil() {
     companion object {
         val client = OkHttpClient()
         val authenticatedBuilder get() = Request.Builder()
-            .addHeader("Authorization", "token 4bcf119f9299b4613089e19e23043ab9b133e746")
+            .addHeader("Authorization", "token ${TokenConfig.githubAccessToken}")
         val prefix = "MyCov coverage report"
         val JSON = MediaType.parse("application/json; charset=utf-8")
     }
