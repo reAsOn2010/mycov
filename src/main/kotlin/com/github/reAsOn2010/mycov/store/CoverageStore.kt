@@ -10,17 +10,18 @@ class CoverageStore {
     private val maps: MutableMap<String, CoverageRepo> = mutableMapOf()
 
     fun getCoveragesForFiles(repoName: String,
-                             commit: String,
+                             base: String,
+                             head: String,
                              files: List<String>): Pair<Map<String, CoverageFile>, Map<String, CoverageFile>> {
         val entry = maps[repoName] ?: throw RuntimeException("Coverage entry not found.")
-        return entry.targetRecord!!.coverageFileMap.mapNotNull { jacocoFile ->
+        return entry.commits[base]!!.coverageFileMap.mapNotNull { jacocoFile ->
             val changedFile = files.firstOrNull { it.contains(jacocoFile.key) }
             if (changedFile == null) {
                 null
             } else {
                 changedFile to jacocoFile.value
             }
-        }.toMap() to entry.diffs[commit]!!.coverageFileMap.mapNotNull { jacocoFile ->
+        }.toMap() to entry.commits[head]!!.coverageFileMap.mapNotNull { jacocoFile ->
             val changedFile = files.firstOrNull { it.contains(jacocoFile.key) }
             if (changedFile == null) {
                 null
@@ -30,28 +31,28 @@ class CoverageStore {
         }.toMap()
     }
 
-    fun diff(repoName: String, commit: String): CoverageDiffReport {
+    fun diff(repoName: String, base: String, head: String): CoverageDiffReport {
         val entry = maps[repoName] ?: throw RuntimeException("Coverage entry not found.")
-        val target = entry.targetRecord!!
-        val targetOverview = target.commitOverview
-        val current = entry.diffs[commit]!!
-        val currentOverview = current.commitOverview
+        val baseCommit = entry.commits[base]!!
+        val baseOverview = baseCommit.commitOverview
+        val currentCommit = entry.commits[head]!!
+        val currentOverview = currentCommit.commitOverview
         return CoverageDiffReport(
-            coverages = DiffTuple(calculateCoverage(targetOverview.line),
+            coverages = DiffTuple(calculateCoverage(baseOverview.line),
                 calculateCoverage(currentOverview.line)),
-            complexity = DiffTuple(calculateSum(targetOverview.complexity),
+            complexity = DiffTuple(calculateSum(baseOverview.complexity),
                 calculateSum(currentOverview.complexity)),
-            files = DiffTuple(target.coverageFileMap.size,
-                current.coverageFileMap.size),
-            lines = DiffTuple(calculateSum(targetOverview.line),
+            files = DiffTuple(baseCommit.coverageFileMap.size,
+                currentCommit.coverageFileMap.size),
+            lines = DiffTuple(calculateSum(baseOverview.line),
                 calculateSum(currentOverview.line)),
-            branches = DiffTuple(calculateSum(targetOverview.branch),
+            branches = DiffTuple(calculateSum(baseOverview.branch),
                 calculateSum(currentOverview.branch)),
-            hits = DiffTuple(targetOverview.line.covered,
+            hits = DiffTuple(baseOverview.line.covered,
                 currentOverview.line.covered),
-            misses = DiffTuple(targetOverview.line.missed,
+            misses = DiffTuple(baseOverview.line.missed,
                 currentOverview.line.missed),
-            partials = DiffTuple(targetOverview.line.partial,
+            partials = DiffTuple(baseOverview.line.partial,
                 currentOverview.line.partial)
         )
     }
@@ -69,7 +70,6 @@ class CoverageStore {
               repoName: String,
               reportType: ReportType,
               commit: String,
-              isTarget: Boolean,
               report: Document) {
         val entry = maps[repoName] ?: {
             val tmp = CoverageRepo(repoName, gitType, reportType)
@@ -95,18 +95,14 @@ class CoverageStore {
         }
         */
         val fileMaps = root.elements("package").map {
-            iterPackageElement(it)
+            iteratePackageElement(it)
         }
         val coverageFileMap = fileMaps.reduce { a, b -> a + b }
         val overview = fileMaps.flatMap { it.values.map { it.fileOverview } }.reduce { a, b -> a + b }
-        if (isTarget) {
-            entry.targetRecord = CoverageCommit(overview, coverageFileMap)
-        } else {
-            entry.diffs[commit] = CoverageCommit(overview, coverageFileMap)
-        }
+        entry.commits[commit] = CoverageCommit(overview, coverageFileMap)
     }
 
-    fun iterPackageElement(root: Element): Map<String, CoverageFile> {
+    fun iteratePackageElement(root: Element): Map<String, CoverageFile> {
         val packageName = root.attributeValue("name")
         return root.elements().mapNotNull {
             val fileName = it.attributeValue("name")
@@ -115,7 +111,7 @@ class CoverageStore {
                 "counter" -> null
                 "class" -> null
                 "sourcefile" -> {
-                    val (overview, tuples) = iterSourceFile(it)
+                    val (overview, tuples) = iterateSourceFile(it)
                      fullFileName to CoverageFile(fullFileName, overview, tuples)
                 }
                 else -> throw RuntimeException("No such type of element.")
@@ -123,7 +119,7 @@ class CoverageStore {
         }.toMap()
     }
 
-    fun iterSourceFile(root: Element): Pair<CoverageOverview, List<CoverageFileTuple>> {
+    fun iterateSourceFile(root: Element): Pair<CoverageOverview, List<CoverageFileTuple>> {
         val fileOverview = CoverageOverview()
         root.elements("counter").map {
             val tuple = OverviewTuple(it.attributeValue("missed").toInt(), 0,

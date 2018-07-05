@@ -5,6 +5,5 @@ class CoverageRepo(
     val gitType: GitType,
     val reportType: ReportType
 ) {
-    var targetRecord: CoverageCommit? = null
-    val diffs: MutableMap<String, CoverageCommit> = mutableMapOf()
+    val commits: MutableMap<String, CoverageCommit> = mutableMapOf()
 }
