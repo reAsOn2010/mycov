@@ -13,7 +13,7 @@ class GitHubUtil() {
     companion object {
         val client = OkHttpClient()
         val authenticatedBuilder get() = Request.Builder()
-            .addHeader("Authorization", "token ${TokenConfig.githubAccessToken}")
+            .addHeader("Authorization", "token ${TokenConfig.github.token}")
         val prefix = "MyCov coverage report"
         val JSON = MediaType.parse("application/json; charset=utf-8")
     }

@@ -3,6 +3,7 @@ package com.github.reAsOn2010.mycov.controller
 import com.github.reAsOn2010.mycov.async.ParseReportTaskFactory
 import com.github.reAsOn2010.mycov.model.*
 import org.dom4j.io.SAXReader
+import org.springframework.core.io.ClassPathResource
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.bind.annotation.RequestMethod.POST
 import org.xml.sax.InputSource
@@ -23,7 +24,7 @@ class ReportController(private val parseReportTaskFactory: ParseReportTaskFactor
                request: ServletRequest) {
         val reader = SAXReader()
         reader.setEntityResolver { _, _ ->
-            InputSource(System::class.java.getResourceAsStream("/report.dtd"))
+            InputSource(ClassPathResource("/report.dtd").inputStream)
         }
         val document = reader.read(request.inputStream)
         val task = parseReportTaskFactory.genTask()

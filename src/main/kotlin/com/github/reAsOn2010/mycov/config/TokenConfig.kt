@@ -6,5 +6,8 @@ import org.springframework.stereotype.Component
 @Component
 @ConfigurationProperties(prefix = "token")
 object TokenConfig {
-    var githubAccessToken = ""
+    class Github {
+        var token = ""
+    }
+    var github = Github()
 }
