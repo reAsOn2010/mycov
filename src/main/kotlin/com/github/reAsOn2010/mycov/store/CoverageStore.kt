@@ -9,6 +9,10 @@ class CoverageStore {
 
     private val maps: MutableMap<String, CoverageRepo> = mutableMapOf()
 
+    fun getEntry(repoName: String): CoverageRepo? {
+        return maps[repoName]
+    }
+
     fun getCoveragesForFiles(repoName: String,
                              base: String,
                              head: String,
@@ -32,28 +36,28 @@ class CoverageStore {
     }
 
     fun diff(repoName: String, base: String, head: String): CoverageDiffReport {
-        val entry = maps[repoName] ?: throw RuntimeException("Coverage entry not found.")
-        val baseCommit = entry.commits[base]!!
+        val entry = maps[repoName] ?: throw CoverageEntryNotFound(repoName)
+        val baseCommit = entry.commits[base] ?: throw CoverageOfCommitNotFound(base)
         val baseOverview = baseCommit.commitOverview
-        val currentCommit = entry.commits[head]!!
-        val currentOverview = currentCommit.commitOverview
+        val headCommit = entry.commits[head] ?: throw CoverageOfCommitNotFound(head)
+        val headOverview = headCommit.commitOverview
         return CoverageDiffReport(
             coverages = DiffTuple(calculateCoverage(baseOverview.line),
-                calculateCoverage(currentOverview.line)),
+                calculateCoverage(headOverview.line)),
             complexity = DiffTuple(calculateSum(baseOverview.complexity),
-                calculateSum(currentOverview.complexity)),
+                calculateSum(headOverview.complexity)),
             files = DiffTuple(baseCommit.coverageFileMap.size,
-                currentCommit.coverageFileMap.size),
+                headCommit.coverageFileMap.size),
             lines = DiffTuple(calculateSum(baseOverview.line),
-                calculateSum(currentOverview.line)),
+                calculateSum(headOverview.line)),
             branches = DiffTuple(calculateSum(baseOverview.branch),
-                calculateSum(currentOverview.branch)),
+                calculateSum(headOverview.branch)),
             hits = DiffTuple(baseOverview.line.covered,
-                currentOverview.line.covered),
+                headOverview.line.covered),
             misses = DiffTuple(baseOverview.line.missed,
-                currentOverview.line.missed),
+                headOverview.line.missed),
             partials = DiffTuple(baseOverview.line.partial,
-                currentOverview.line.partial)
+                headOverview.line.partial)
         )
     }
 

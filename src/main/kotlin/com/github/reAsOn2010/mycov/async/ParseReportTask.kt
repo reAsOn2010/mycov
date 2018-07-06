@@ -25,6 +25,8 @@ class ParseReportTask(private val coverageStore: CoverageStore,
             gitHubUtil.commentCoverageReport(owner, repo, base, pullRequestNumber, diff)
         } catch (e: PullRequestNotFound) {
             println("Commit is not associate with a pr, skip diff and comment")
+        } catch (e: CoverageOfCommitNotFound) {
+            println("Base coverage report is not found, skip diff and comment")
         }
         return CompletableFuture.completedFuture(null)
     }

@@ -3,6 +3,7 @@ package com.github.reAsOn2010.mycov.controller
 import com.github.reAsOn2010.mycov.async.ParseReportTaskFactory
 import com.github.reAsOn2010.mycov.model.*
 import org.dom4j.io.SAXReader
+import org.json.JSONObject
 import org.springframework.core.io.ClassPathResource
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.bind.annotation.RequestMethod.POST
@@ -21,7 +22,7 @@ class ReportController(private val parseReportTaskFactory: ParseReportTaskFactor
                @PathVariable("repo") repo: String,
                @PathVariable("commit") commit: String,
                @PathVariable("report_type") reportType: ReportType,
-               request: ServletRequest) {
+               request: ServletRequest): String {
         val reader = SAXReader()
         reader.setEntityResolver { _, _ ->
             InputSource(ClassPathResource("/report.dtd").inputStream)
@@ -29,6 +30,7 @@ class ReportController(private val parseReportTaskFactory: ParseReportTaskFactor
         val document = reader.read(request.inputStream)
         val task = parseReportTaskFactory.genTask()
         task.execute(gitType, owner, repo, commit, reportType, document)
+        return JSONObject().put("status", "ok").toString()
     }
 
 }
