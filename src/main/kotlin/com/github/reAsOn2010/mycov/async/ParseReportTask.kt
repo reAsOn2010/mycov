@@ -18,12 +18,15 @@ class ParseReportTask(private val coverageStore: CoverageStore,
                 reportType: ReportType,
                 document: Document): CompletableFuture<Void> {
         // get protected branch
-        val isTarget = gitHubUtil.isCommitOnTargetBranch(owner, repo, "master", commit)
-        coverageStore.store(gitType, "$owner/$repo", reportType, commit, isTarget, document)
-        if (!isTarget) {
-            val diff = coverageStore.diff("$owner/$repo", commit)
-            val (baseBranch, pullRequestNumber) = gitHubUtil.getPullRequestBaseAndNumber(owner, repo, commit)
-            gitHubUtil.commentCoverageReport(owner, repo, baseBranch, pullRequestNumber, diff)
+        coverageStore.store(gitType, "$owner/$repo", reportType, commit, document)
+        try {
+            val (base, pullRequestNumber) = gitHubUtil.getPullRequestBaseAndNumber(owner, repo, commit)
+            val diff = coverageStore.diff("$owner/$repo", base, commit)
+            gitHubUtil.commentCoverageReport(owner, repo, base, pullRequestNumber, diff)
+        } catch (e: PullRequestNotFound) {
+            println("Commit is not associate with a pr, skip diff and comment")
+        } catch (e: CoverageOfCommitNotFound) {
+            println("Base coverage report is not found, skip diff and comment")
         }
         return CompletableFuture.completedFuture(null)
     }

@@ -17,12 +17,12 @@ class ViewController(private val gitHubUtil: GitHubUtil,
              @PathVariable("owner") owner: String,
              @PathVariable("repo") repo: String,
              @PathVariable("pullRequestNumber") pullRequestNumber: Int): String {
-        val (baseBranch, head) = gitHubUtil.getPullRequestBaseAndHead(owner, repo, pullRequestNumber)
-        val (changedFiles, rawDiff) = gitHubUtil.getDiffOfCommit(owner, repo, baseBranch, head)
+        val (baseSha, headSha) = gitHubUtil.getPullRequestBaseAndHead(owner, repo, pullRequestNumber)
+        val (changedFiles, rawDiff) = gitHubUtil.getDiffOfCommit(owner, repo, baseSha, headSha)
         val diff = UrlEscapers.urlPathSegmentEscaper().escape(rawDiff)
-        val (baseCoverages, currentCoverages) = coverageStore.getCoveragesForFiles("$owner/$repo", head, changedFiles)
+        val (baseCoverages, headCoverages) = coverageStore.getCoveragesForFiles("$owner/$repo", baseSha, headSha, changedFiles)
         val base = baseCoverages.mapValues { it.value.lineCoverageFile.map { it.toSimple() } }
-        val current = currentCoverages.mapValues { it.value.lineCoverageFile.map { it.toSimple() } }
+        val head = headCoverages.mapValues { it.value.lineCoverageFile.map { it.toSimple() } }
         return """
 <!DOCTYPE html>
 <html>
@@ -56,7 +56,7 @@ document.getElementById("diff2html").innerHTML = diffHtml;
 </script>
 <script>
 var base = ${Gson().toJson(base)}
-var current = ${Gson().toJson(current)}
+var current = ${Gson().toJson(head)}
 
 ${'$'}(document).ready(function() {
     for (var item of ${'$'}(".d2h-file-wrapper")) {
