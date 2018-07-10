@@ -14,7 +14,7 @@ import javax.servlet.ServletRequest
 @RequestMapping("/report")
 class ReportController(private val parseReportTaskFactory: ParseReportTaskFactory) {
 
-    @RequestMapping(value = "/{git_type}/{owner}/{repo}/{commit}/{report_type}", method = [POST],
+    @RequestMapping(value = ["/{git_type}/{owner}/{repo}/{commit}/{report_type}"], method = [POST],
         consumes = ["text/xml; charset=utf-8"],
         produces = ["application/json; charset=utf-8"])
     fun report(@PathVariable("git_type") gitType: GitType,

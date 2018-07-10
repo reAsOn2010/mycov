@@ -70,7 +70,8 @@ class GitHubUtil {
         return changedFiles to diff
     }
 
-    fun commentCoverageReport(owner: String, repo: String, base: String, pullRequestNumber: Int, report: CoverageDiffReport) {
+    fun commentCoverageReport(owner: String, repo: String, gitType: GitType, reportType: ReportType, base: String,
+                              pullRequestNumber: Int, report: CoverageDiffReport) {
         val listRequest = authenticatedBuilder
             .url("https://api.github.com/repos/$owner/$repo/issues/$pullRequestNumber/comments").build()
         val response = client.newCall(listRequest).execute()
@@ -80,7 +81,7 @@ class GitHubUtil {
         val body = response.body()!!.string()
         val json = JSONArray(body).map { it as JSONObject }
         val original = json.firstOrNull { it.getString("body").startsWith(prefix) }
-        val comment = buildReportContent(owner, repo, base, pullRequestNumber, report)
+        val comment = buildReportContent(owner, repo, gitType, reportType, base, pullRequestNumber, report)
         if (original == null) {
             val createRequest = authenticatedBuilder
                 .post(RequestBody.create(JSON, JSONObject().put("body", comment).toString()))
@@ -94,7 +95,8 @@ class GitHubUtil {
         }
     }
 
-    fun buildReportContent(owner: String, repo: String, base: String, pullRequestNumber: Int, report: CoverageDiffReport): String {
+    fun buildReportContent(owner: String, repo: String, gitType: GitType, reportType: ReportType, base: String,
+                           pullRequestNumber: Int, report: CoverageDiffReport): String {
         val lines = listOf(
             listOf("@@", "", "Coverage", "Diff", "", "@@"),
             listOf("##", "", base, "#$pullRequestNumber", "+/-", "##"),
@@ -127,7 +129,7 @@ class GitHubUtil {
         }
         return """
 $prefix
-[Link](${WebSiteConfig.url}/view/github/$owner/$repo/$pullRequestNumber)
+[Link](${WebSiteConfig.url}/view/${gitType.name.toLowerCase()}/$owner/$repo/$pullRequestNumber/${reportType.name.toLowerCase()})
 
 ```diff
 ${withPadding.joinToString("\n")}

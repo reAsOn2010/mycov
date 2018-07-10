@@ -1,11 +1,32 @@
 spring:
   profiles:
-    active: dev
+    active: pat
 token:
   github:
     access-token:
 ---
 spring:
-  profiles: dev
+  profiles: pat
+  datasource:
+    url: jdbc:h2:/tmp/h2
+    username:
+    password:
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
 website:
   url: https://mycov.pat-edu.org
+---
+spring:
+  profiles: gae
+  datasource:
+    url: jdbc:h2:mem:mycov
+    username:
+    password:
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+website:
+  url:

@@ -21,8 +21,8 @@ class ParseReportTask(private val coverageStore: CoverageStore,
         coverageStore.store(gitType, "$owner/$repo", reportType, commit, document)
         try {
             val (base, pullRequestNumber) = gitHubUtil.getPullRequestBaseAndNumber(owner, repo, commit)
-            val diff = coverageStore.diff("$owner/$repo", base, commit)
-            gitHubUtil.commentCoverageReport(owner, repo, base, pullRequestNumber, diff)
+            val diff = coverageStore.diff("$owner/$repo", gitType, reportType, base, commit)
+            gitHubUtil.commentCoverageReport(owner, repo, gitType, reportType, base, pullRequestNumber, diff)
         } catch (e: PullRequestNotFound) {
             println("Commit is not associate with a pr, skip diff and comment")
         } catch (e: CoverageOfCommitNotFound) {

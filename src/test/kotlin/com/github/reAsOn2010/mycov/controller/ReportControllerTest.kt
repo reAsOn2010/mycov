@@ -1,7 +1,10 @@
 package com.github.reAsOn2010.mycov.controller
 
 import com.github.reAsOn2010.mycov.MyCovTest
+import com.github.reAsOn2010.mycov.dao.CoverageRecordDao
+import com.github.reAsOn2010.mycov.model.GitType.GITHUB
 import com.github.reAsOn2010.mycov.model.PullRequestNotFound
+import com.github.reAsOn2010.mycov.model.ReportType.JACOCO
 import com.github.reAsOn2010.mycov.store.CoverageStore
 import com.nhaarman.mockito_kotlin.*
 import org.assertj.core.api.Assertions.assertThat
@@ -15,7 +18,7 @@ import org.springframework.http.*
 class ReportControllerTest: MyCovTest() {
 
     @Autowired
-    lateinit var coverageStore: CoverageStore
+    lateinit var coverageRecordDao: CoverageRecordDao
 
     @Test
     fun successfullyWithNoPR() {
@@ -29,8 +32,8 @@ class ReportControllerTest: MyCovTest() {
             request, String::class.java)
         val json = JSONObject(response)
         assertThat(json.getString("status")).isEqualTo("ok")
-        assertThat(coverageStore.getEntry("reAsOn2010/mycov")).isNotNull
-        assertThat(coverageStore.getEntry("reAsOn2010/mycov")!!.commits[head]).isNotNull
+        assertThat(coverageRecordDao.findByRepoName("reAsOn2010/mycov")).isNotEmpty
+        assertThat(coverageRecordDao.findByRepoNameAndHashAndGitTypeAndReportType("reAsOn2010/mycov", head, GITHUB, JACOCO)).isNotNull
     }
 
     @Test
@@ -46,8 +49,8 @@ class ReportControllerTest: MyCovTest() {
             request, String::class.java)
         val json = JSONObject(response)
         assertThat(json.getString("status")).isEqualTo("ok")
-        assertThat(coverageStore.getEntry("reAsOn2010/mycov")).isNotNull
-        assertThat(coverageStore.getEntry("reAsOn2010/mycov")!!.commits[head]).isNotNull
+        assertThat(coverageRecordDao.findByRepoName("reAsOn2010/mycov")).isNotEmpty
+        assertThat(coverageRecordDao.findByRepoNameAndHashAndGitTypeAndReportType("reAsOn2010/mycov", head, GITHUB, JACOCO)).isNotNull
     }
 
     @Test
@@ -72,10 +75,10 @@ class ReportControllerTest: MyCovTest() {
         val headJson = JSONObject(headResponse)
         assertThat(headJson.getString("status")).isEqualTo("ok")
 
-        verify(githubUtil, times(1)).commentCoverageReport(any(), any(), eq(base), eq(1), any())
+        verify(githubUtil, times(1)).commentCoverageReport(any(), any(), any(), any(), eq(base), eq(1), any())
 
-        assertThat(coverageStore.getEntry("reAsOn2010/mycov")).isNotNull
-        assertThat(coverageStore.getEntry("reAsOn2010/mycov")!!.commits[base]).isNotNull
-        assertThat(coverageStore.getEntry("reAsOn2010/mycov")!!.commits[head]).isNotNull
+        assertThat(coverageRecordDao.findByRepoName("reAsOn2010/mycov")).isNotEmpty
+        assertThat(coverageRecordDao.findByRepoNameAndHashAndGitTypeAndReportType("reAsOn2010/mycov", head, GITHUB, JACOCO)).isNotNull
+        assertThat(coverageRecordDao.findByRepoNameAndHashAndGitTypeAndReportType("reAsOn2010/mycov", base, GITHUB, JACOCO)).isNotNull
     }
 }
