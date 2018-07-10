@@ -10,11 +10,6 @@ class PullRequestNotFound(private val sha: String): RuntimeException() {
         get() = "Pull request with head of '$sha' not found."
 }
 
-class CoverageEntryNotFound(private val repoName: String): RuntimeException() {
-    override val message: String
-        get() = "Coverage entry of '$repoName' not found."
-}
-
 class CoverageOfCommitNotFound(private val sha: String): RuntimeException() {
     override val message: String
         get() = "Coverage of commit '$sha' not found."
