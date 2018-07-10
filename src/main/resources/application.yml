@@ -19,9 +19,9 @@ website:
   url: https://mycov.pat-edu.org
 ---
 spring:
-  profiles: gae
+  profiles: cloud
   datasource:
-    url: jdbc:h2:mem:mycov
+    url: jdbc:h2:/tmp/mycov
     username:
     password:
     driver-class-name: org.h2.Driver
