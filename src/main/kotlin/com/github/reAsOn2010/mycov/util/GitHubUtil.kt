@@ -25,12 +25,12 @@ class GitHubUtil {
         }
         val body = response.body()!!.string()
         val json = JSONArray(body).map { it as JSONObject }
-        val targetPullRequest = json.firstOrNull { it.getJSONObject("head").getString("head").startsWith(head) }
+        val targetPullRequest = json.firstOrNull { it.getJSONObject("head").getString("sha").startsWith(head) }
         if (targetPullRequest == null) {
             throw PullRequestNotFound(head)
         } else {
             val pullRequestNumber = targetPullRequest.getInt("number")
-            val baseCommit = targetPullRequest.getJSONObject("base").getString("head").substring(0, 7)
+            val baseCommit = targetPullRequest.getJSONObject("base").getString("sha").substring(0, 7)
             return baseCommit to pullRequestNumber
         }
     }
