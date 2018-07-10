@@ -3,7 +3,7 @@ spring:
     active: pat
 token:
   github:
-    access-token:
+    token:
 ---
 spring:
   profiles: pat

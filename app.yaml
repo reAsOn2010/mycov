@@ -1,2 +1,4 @@
 runtime: custom
 env: flex
+env_variables:
+  SPRING_PROFILES_ACTIVE: gae

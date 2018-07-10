@@ -1,6 +1,16 @@
 steps:
 - name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-t', 'mycov-build', '-f', 'Dockerfile.build', '.']
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['run', 'mycov-build']
+  volumes:
+  - name: 'vol'
+    path: '/app/mycov/build'
+- name: 'gcr.io/cloud-builders/docker'
   args: ['build', '-t', 'gcr.io/mycov-209705/$REPO_NAME:$COMMIT_SHA', '.']
+  volumes:
+  - name: 'vol'
+    path: '/app/mycov/build'
 - name: 'gcr.io/cloud-builders/docker'
   args: ['push', 'gcr.io/mycov-209705/$REPO_NAME:$COMMIT_SHA']
 - name: 'gcr.io/cloud-builders/gcloud'
