@@ -1,6 +1,7 @@
 package com.github.reAsOn2010.mycov.controller
 
 import com.github.reAsOn2010.mycov.model.*
+import com.github.reAsOn2010.mycov.model.ReportType.JACOCO
 import com.github.reAsOn2010.mycov.store.CoverageStore
 import com.github.reAsOn2010.mycov.util.GitHubUtil
 import com.google.common.net.UrlEscapers
@@ -12,15 +13,17 @@ import org.springframework.web.bind.annotation.*
 class ViewController(private val gitHubUtil: GitHubUtil,
                      private val coverageStore: CoverageStore) {
 
-    @RequestMapping(value = "/{git_type}/{owner}/{repo}/{pullRequestNumber}")
+    @RequestMapping(value = ["/{git_type}/{owner}/{repo}/{pullRequestNumber}/{report_type}"])
     fun view(@PathVariable("git_type") gitType: GitType,
              @PathVariable("owner") owner: String,
              @PathVariable("repo") repo: String,
+             @PathVariable("report_type") reportType: ReportType,
              @PathVariable("pullRequestNumber") pullRequestNumber: Int): String {
         val (baseSha, headSha) = gitHubUtil.getPullRequestBaseAndHead(owner, repo, pullRequestNumber)
         val (changedFiles, rawDiff) = gitHubUtil.getDiffOfCommit(owner, repo, baseSha, headSha)
         val diff = UrlEscapers.urlPathSegmentEscaper().escape(rawDiff)
-        val (baseCoverages, headCoverages) = coverageStore.getCoveragesForFiles("$owner/$repo", baseSha, headSha, changedFiles)
+        val (baseCoverages, headCoverages) = coverageStore.getCoveragesForFiles(
+            "$owner/$repo", gitType, reportType, baseSha, headSha, changedFiles)
         val base = baseCoverages.mapValues { it.value.lineCoverageFile.map { it.toSimple() } }
         val head = headCoverages.mapValues { it.value.lineCoverageFile.map { it.toSimple() } }
         return """

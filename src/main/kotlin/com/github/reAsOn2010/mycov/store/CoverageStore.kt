@@ -1,31 +1,32 @@
 package com.github.reAsOn2010.mycov.store
 
+import com.github.reAsOn2010.mycov.dao.CoverageRecordDao
 import com.github.reAsOn2010.mycov.model.*
 import org.dom4j.*
 import org.springframework.stereotype.Component
 
 @Component
-class CoverageStore {
-
-    private val maps: MutableMap<String, CoverageRepo> = mutableMapOf()
-
-    fun getEntry(repoName: String): CoverageRepo? {
-        return maps[repoName]
-    }
+class CoverageStore(private val coverageRecordDao: CoverageRecordDao) {
 
     fun getCoveragesForFiles(repoName: String,
+                             gitType: GitType,
+                             reportType: ReportType,
                              base: String,
                              head: String,
                              files: List<String>): Pair<Map<String, CoverageFile>, Map<String, CoverageFile>> {
-        val entry = maps[repoName] ?: throw RuntimeException("Coverage entry not found.")
-        return entry.commits[base]!!.coverageFileMap.mapNotNull { jacocoFile ->
+        val baseRecord = coverageRecordDao.findByRepoNameAndHashAndGitTypeAndReportType(repoName, base, gitType, reportType)
+                ?: throw CoverageOfCommitNotFound(base)
+        val headRecord = coverageRecordDao.findByRepoNameAndHashAndGitTypeAndReportType(repoName, head, gitType, reportType)
+                ?: throw CoverageOfCommitNotFound(head)
+
+        return baseRecord.detail.coverageFileMap.mapNotNull { jacocoFile ->
             val changedFile = files.firstOrNull { it.contains(jacocoFile.key) }
             if (changedFile == null) {
                 null
             } else {
                 changedFile to jacocoFile.value
             }
-        }.toMap() to entry.commits[head]!!.coverageFileMap.mapNotNull { jacocoFile ->
+        }.toMap() to headRecord.detail.coverageFileMap.mapNotNull { jacocoFile ->
             val changedFile = files.firstOrNull { it.contains(jacocoFile.key) }
             if (changedFile == null) {
                 null
@@ -35,19 +36,20 @@ class CoverageStore {
         }.toMap()
     }
 
-    fun diff(repoName: String, base: String, head: String): CoverageDiffReport {
-        val entry = maps[repoName] ?: throw CoverageEntryNotFound(repoName)
-        val baseCommit = entry.commits[base] ?: throw CoverageOfCommitNotFound(base)
-        val baseOverview = baseCommit.commitOverview
-        val headCommit = entry.commits[head] ?: throw CoverageOfCommitNotFound(head)
-        val headOverview = headCommit.commitOverview
+    fun diff(repoName: String, gitType: GitType, reportType: ReportType, base: String, head: String): CoverageDiffReport {
+        val baseRecord = coverageRecordDao.findByRepoNameAndHashAndGitTypeAndReportType(repoName, base, gitType, reportType)
+                ?: throw CoverageOfCommitNotFound(base)
+        val baseOverview = baseRecord.detail.commitOverview
+        val headRecord = coverageRecordDao.findByRepoNameAndHashAndGitTypeAndReportType(repoName, head, gitType, reportType)
+                ?: throw CoverageOfCommitNotFound(head)
+        val headOverview = baseRecord.detail.commitOverview
         return CoverageDiffReport(
             coverages = DiffTuple(calculateCoverage(baseOverview.line),
                 calculateCoverage(headOverview.line)),
             complexity = DiffTuple(calculateSum(baseOverview.complexity),
                 calculateSum(headOverview.complexity)),
-            files = DiffTuple(baseCommit.coverageFileMap.size,
-                headCommit.coverageFileMap.size),
+            files = DiffTuple(baseRecord.detail.coverageFileMap.size,
+                headRecord.detail.coverageFileMap.size),
             lines = DiffTuple(calculateSum(baseOverview.line),
                 calculateSum(headOverview.line)),
             branches = DiffTuple(calculateSum(baseOverview.branch),
@@ -75,14 +77,7 @@ class CoverageStore {
               reportType: ReportType,
               commit: String,
               report: Document) {
-        val entry = maps[repoName] ?: {
-            val tmp = CoverageRepo(repoName, gitType, reportType)
-            maps[repoName] = tmp
-            tmp
-        }()
-        if (entry.gitType != gitType || entry.reportType != reportType) {
-            throw RuntimeException("Unmatched git type or report type.")
-        }
+
         val root = report.rootElement
         /*
         root.elements("counter").map {
@@ -103,7 +98,19 @@ class CoverageStore {
         }
         val coverageFileMap = fileMaps.reduce { a, b -> a + b }
         val overview = fileMaps.flatMap { it.values.map { it.fileOverview } }.reduce { a, b -> a + b }
-        entry.commits[commit] = CoverageCommit(overview, coverageFileMap)
+        // entry.commits[commit] = CoverageCommit(overview, coverageFileMap)
+
+        val record = coverageRecordDao.findByRepoNameAndHashAndGitTypeAndReportType(
+            repoName, commit, gitType, reportType)?.apply {
+            detail = CoverageCommit(overview, coverageFileMap) } ?:
+                CoverageRecord(
+                    repoName = repoName,
+                    hash = commit,
+                    gitType = gitType,
+                    reportType = reportType,
+                    detail = CoverageCommit(overview, coverageFileMap)
+                )
+        coverageRecordDao.save(record)
     }
 
     fun iteratePackageElement(root: Element): Map<String, CoverageFile> {
