@@ -6,16 +6,21 @@ import com.github.reAsOn2010.mycov.model.GitType.GITHUB
 import com.github.reAsOn2010.mycov.model.PullRequestNotFound
 import com.github.reAsOn2010.mycov.model.ReportType.JACOCO
 import com.github.reAsOn2010.mycov.store.CoverageStore
+import com.github.reAsOn2010.mycov.util.GitHubUtil
 import com.nhaarman.mockito_kotlin.*
 import org.assertj.core.api.Assertions.assertThat
 import org.json.JSONObject
 import org.junit.Test
 import org.mockito.Mockito
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.core.io.ClassPathResource
 import org.springframework.http.*
 
 class ReportControllerTest: MyCovTest() {
+
+    @MockBean
+    lateinit var githubUtil: GitHubUtil
 
     @Autowired
     lateinit var coverageRecordDao: CoverageRecordDao

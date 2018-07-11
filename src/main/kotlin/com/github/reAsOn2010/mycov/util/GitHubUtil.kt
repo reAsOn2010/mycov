@@ -7,7 +7,7 @@ import org.json.*
 import org.springframework.stereotype.Component
 
 @Component
-class GitHubUtil {
+class GitHubUtil(private val baseURLConfig: BaseURLConfig) {
     companion object {
         val client = OkHttpClient()
         val authenticatedBuilder get() = Request.Builder()
@@ -18,7 +18,7 @@ class GitHubUtil {
 
     fun getPullRequestBaseAndNumber(owner: String, repo: String, head: String): Pair<String, Int> {
         val request = authenticatedBuilder
-            .url("https://api.github.com/repos/$owner/$repo/pulls?sort=updated&direction=desc").build()
+            .url("${baseURLConfig.github}/repos/$owner/$repo/pulls?sort=updated&direction=desc").build()
         val response = client.newCall(request).execute()
         if (!response.isSuccessful) {
             throw GithubAPICallError(request.url().toString())
@@ -37,7 +37,7 @@ class GitHubUtil {
 
     fun getPullRequestBaseAndHead(owner: String, repo: String, pullRequestNumber: Int): Pair<String, String> {
         val request = authenticatedBuilder
-            .url("https://api.github.com/repos/$owner/$repo/pulls/$pullRequestNumber").build()
+            .url("${baseURLConfig.github}/repos/$owner/$repo/pulls/$pullRequestNumber").build()
         val response = client.newCall(request).execute()
         if (!response.isSuccessful) {
             throw GithubAPICallError(request.url().toString())
@@ -52,14 +52,14 @@ class GitHubUtil {
     fun getDiffOfCommit(owner: String, repo: String, base: String, head: String): Pair<List<String>, String> {
         val diffRequest = authenticatedBuilder
             .addHeader("Accept", "application/vnd.github.v3.diff")
-            .url("https://api.github.com/repos/$owner/$repo/compare/$base...$head").build()
+            .url("${baseURLConfig.github}/repos/$owner/$repo/compare/$base...$head").build()
         val diffResponse = client.newCall(diffRequest).execute()
         if (!diffResponse.isSuccessful) {
             throw GithubAPICallError(diffRequest.url().toString())
         }
         val diff = diffResponse.body()!!.string()
         val changesRequest = authenticatedBuilder
-            .url("https://api.github.com/repos/$owner/$repo/compare/$base...$head").build()
+            .url("${baseURLConfig.github}/repos/$owner/$repo/compare/$base...$head").build()
         val changesResponse = client.newCall(changesRequest).execute()
         if (!changesResponse.isSuccessful) {
             throw GithubAPICallError(diffRequest.url().toString())
@@ -73,7 +73,7 @@ class GitHubUtil {
     fun commentCoverageReport(owner: String, repo: String, gitType: GitType, reportType: ReportType, base: String,
                               pullRequestNumber: Int, report: CoverageDiffReport) {
         val listRequest = authenticatedBuilder
-            .url("https://api.github.com/repos/$owner/$repo/issues/$pullRequestNumber/comments").build()
+            .url("${baseURLConfig.github}/repos/$owner/$repo/issues/$pullRequestNumber/comments").build()
         val response = client.newCall(listRequest).execute()
         if (!response.isSuccessful) {
             throw GithubAPICallError(listRequest.url().toString())
@@ -85,12 +85,12 @@ class GitHubUtil {
         if (original == null) {
             val createRequest = authenticatedBuilder
                 .post(RequestBody.create(JSON, JSONObject().put("body", comment).toString()))
-                .url("https://api.github.com/repos/$owner/$repo/issues/$pullRequestNumber/comments").build()
+                .url("${baseURLConfig.github}/repos/$owner/$repo/issues/$pullRequestNumber/comments").build()
             client.newCall(createRequest).execute()
         } else {
             val updateRequest = authenticatedBuilder
                 .post(RequestBody.create(JSON, JSONObject().put("body", comment).toString()))
-                .url("https://api.github.com/repos/$owner/$repo/issues/comments/${original.getInt("id")}").build()
+                .url("${baseURLConfig.github}/repos/$owner/$repo/issues/comments/${original.getInt("id")}").build()
             client.newCall(updateRequest).execute()
         }
     }
@@ -103,7 +103,7 @@ class GitHubUtil {
             "context" to "ci/mycov")
         val request = authenticatedBuilder
             .post(RequestBody.create(JSON, JSONObject(status).toString()))
-            .url("https://api.github.com/repos/$owner/$repo/statuses/$head").build()
+            .url("${baseURLConfig.github}/repos/$owner/$repo/statuses/$head").build()
         client.newCall(request).execute()
     }
 
