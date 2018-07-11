@@ -5,8 +5,10 @@ import com.github.reAsOn2010.mycov.store.CoverageStore
 import com.github.reAsOn2010.mycov.util.GitHubUtil
 import org.dom4j.Document
 import org.springframework.scheduling.annotation.Async
+import org.springframework.stereotype.Service
 import java.util.concurrent.CompletableFuture
 
+@Service
 class ParseReportTask(private val coverageStore: CoverageStore,
                       private val gitHubUtil: GitHubUtil) {
 
@@ -17,8 +19,9 @@ class ParseReportTask(private val coverageStore: CoverageStore,
                 commit: String,
                 reportType: ReportType,
                 document: Document): CompletableFuture<Void> {
-        // get protected branch
         coverageStore.store(gitType, "$owner/$repo", reportType, commit, document)
+        val record = coverageStore.get("$owner/$repo", gitType, reportType, commit)
+        gitHubUtil.statusCoverageReport(owner, repo, commit, record.detail.commitOverview)
         try {
             val (base, pullRequestNumber) = gitHubUtil.getPullRequestBaseAndNumber(owner, repo, commit)
             val diff = coverageStore.diff("$owner/$repo", gitType, reportType, base, commit)

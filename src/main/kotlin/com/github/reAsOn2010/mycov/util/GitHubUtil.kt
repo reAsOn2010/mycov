@@ -95,6 +95,19 @@ class GitHubUtil {
         }
     }
 
+    fun statusCoverageReport(owner: String, repo: String, head: String, overview: CoverageOverview) {
+        val value = 100.0 * overview.line.covered / (overview.line.covered + overview.line.missed + overview.line.partial)
+        val percent = "%.2f%%".format(value)
+        val status = mapOf("state" to if (value > 80) "success" else "failure",
+            "description" to "Coverage of this commit is $percent",
+            "context" to "ci/mycov")
+        val request = authenticatedBuilder
+            .post(RequestBody.create(JSON, JSONObject(status).toString()))
+            .url("https://api.github.com/repos/$owner/$repo/statuses/$head").build()
+        val response = client.newCall(request).execute()
+        val body = response.body()!!.string()
+    }
+
     fun buildReportContent(owner: String, repo: String, gitType: GitType, reportType: ReportType, base: String,
                            pullRequestNumber: Int, report: CoverageDiffReport): String {
         val lines = listOf(

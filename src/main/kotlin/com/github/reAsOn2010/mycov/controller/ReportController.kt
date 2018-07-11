@@ -1,6 +1,6 @@
 package com.github.reAsOn2010.mycov.controller
 
-import com.github.reAsOn2010.mycov.async.ParseReportTaskFactory
+import com.github.reAsOn2010.mycov.async.*
 import com.github.reAsOn2010.mycov.model.*
 import org.dom4j.io.SAXReader
 import org.json.JSONObject
@@ -12,7 +12,7 @@ import javax.servlet.ServletRequest
 
 @RestController
 @RequestMapping("/report")
-class ReportController(private val parseReportTaskFactory: ParseReportTaskFactory) {
+class ReportController(private val parseReportTask: ParseReportTask) {
 
     @RequestMapping(value = ["/{git_type}/{owner}/{repo}/{commit}/{report_type}"], method = [POST],
         consumes = ["text/xml; charset=utf-8"],
@@ -28,8 +28,7 @@ class ReportController(private val parseReportTaskFactory: ParseReportTaskFactor
             InputSource(ClassPathResource("/report.dtd").inputStream)
         }
         val document = reader.read(request.inputStream)
-        val task = parseReportTaskFactory.genTask()
-        task.execute(gitType, owner, repo, commit, reportType, document)
+        parseReportTask.execute(gitType, owner, repo, commit, reportType, document)
         return JSONObject().put("status", "ok").toString()
     }
 
