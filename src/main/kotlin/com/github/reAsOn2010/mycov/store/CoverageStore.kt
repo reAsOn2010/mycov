@@ -115,7 +115,7 @@ class CoverageStore(private val coverageRecordDao: CoverageRecordDao) {
                     reportType = reportType,
                     detail = CoverageCommit(overview, coverageFileMap)
                 )
-        coverageRecordDao.save(record)
+        coverageRecordDao.saveAndFlush(record)
     }
 
     fun iteratePackageElement(root: Element): Map<String, CoverageFile> {
