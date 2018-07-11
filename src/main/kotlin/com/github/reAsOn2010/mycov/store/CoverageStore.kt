@@ -8,6 +8,11 @@ import org.springframework.stereotype.Component
 @Component
 class CoverageStore(private val coverageRecordDao: CoverageRecordDao) {
 
+    fun get(repoName: String, gitType: GitType, reportType: ReportType, hash: String): CoverageRecord {
+        return coverageRecordDao.findByRepoNameAndHashAndGitTypeAndReportType(repoName, hash, gitType, reportType) ?:
+                throw CoverageOfCommitNotFound(hash)
+    }
+
     fun getCoveragesForFiles(repoName: String,
                              gitType: GitType,
                              reportType: ReportType,
@@ -110,7 +115,7 @@ class CoverageStore(private val coverageRecordDao: CoverageRecordDao) {
                     reportType = reportType,
                     detail = CoverageCommit(overview, coverageFileMap)
                 )
-        coverageRecordDao.save(record)
+        coverageRecordDao.saveAndFlush(record)
     }
 
     fun iteratePackageElement(root: Element): Map<String, CoverageFile> {

@@ -25,12 +25,12 @@ class GitHubUtil {
         }
         val body = response.body()!!.string()
         val json = JSONArray(body).map { it as JSONObject }
-        val targetPullRequest = json.firstOrNull { it.getJSONObject("head").getString("head").startsWith(head) }
+        val targetPullRequest = json.firstOrNull { it.getJSONObject("head").getString("sha") == head }
         if (targetPullRequest == null) {
             throw PullRequestNotFound(head)
         } else {
             val pullRequestNumber = targetPullRequest.getInt("number")
-            val baseCommit = targetPullRequest.getJSONObject("base").getString("head").substring(0, 7)
+            val baseCommit = targetPullRequest.getJSONObject("base").getString("sha")
             return baseCommit to pullRequestNumber
         }
     }
@@ -44,8 +44,8 @@ class GitHubUtil {
         }
         val body = response.body()!!.string()
         val json = JSONObject(body)
-        val base = json.getJSONObject("base").getString("sha").substring(0, 7)
-        val head = json.getJSONObject("head").getString("sha").substring(0, 7)
+        val base = json.getJSONObject("base").getString("sha")
+        val head = json.getJSONObject("head").getString("sha")
         return base to head
     }
 
@@ -95,11 +95,23 @@ class GitHubUtil {
         }
     }
 
+    fun statusCoverageReport(owner: String, repo: String, head: String, overview: CoverageOverview) {
+        val value = 100.0 * overview.line.covered / (overview.line.covered + overview.line.missed + overview.line.partial)
+        val percent = "%.2f%%".format(value)
+        val status = mapOf("state" to if (value > 80) "success" else "failure",
+            "description" to "Coverage of this commit is $percent",
+            "context" to "ci/mycov")
+        val request = authenticatedBuilder
+            .post(RequestBody.create(JSON, JSONObject(status).toString()))
+            .url("https://api.github.com/repos/$owner/$repo/statuses/$head").build()
+        client.newCall(request).execute()
+    }
+
     fun buildReportContent(owner: String, repo: String, gitType: GitType, reportType: ReportType, base: String,
                            pullRequestNumber: Int, report: CoverageDiffReport): String {
         val lines = listOf(
             listOf("@@", "", "Coverage", "Diff", "", "@@"),
-            listOf("##", "", base, "#$pullRequestNumber", "+/-", "##"),
+            listOf("##", "", base.substring(0, 7), "#$pullRequestNumber", "+/-", "##"),
             listOf("", "", "", "", "", ""),
             buildLine(signed = true, reversed = false, percentage = true, name = "Coverage", diffTuple = report.coverages),
             buildLine(signed = true, reversed = true, percentage = false, name = "Complexity", diffTuple = report.complexity),

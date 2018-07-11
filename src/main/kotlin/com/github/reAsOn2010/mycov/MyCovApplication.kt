@@ -6,8 +6,8 @@ import org.springframework.boot.builder.SpringApplicationBuilder
 import org.springframework.boot.web.support.SpringBootServletInitializer
 import org.springframework.scheduling.annotation.EnableAsync
 
-@EnableAsync
 @SpringBootApplication
+@EnableAsync
 class MyCovApplication : SpringBootServletInitializer() {
 
     override fun configure(application: SpringApplicationBuilder): SpringApplicationBuilder {
