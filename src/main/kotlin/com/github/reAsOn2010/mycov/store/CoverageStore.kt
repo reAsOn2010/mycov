@@ -77,8 +77,8 @@ class CoverageStore(private val coverageRecordDao: CoverageRecordDao) {
         return line.covered + line.partial + line.missed
     }
 
-    fun store(gitType: GitType,
-              repoName: String,
+    fun store(repoName: String,
+              gitType: GitType,
               reportType: ReportType,
               commit: String,
               report: Document) {

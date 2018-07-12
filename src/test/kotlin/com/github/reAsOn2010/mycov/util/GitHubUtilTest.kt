@@ -89,8 +89,18 @@ class GitHubUtilTest: MyCovTest() {
         server.enqueue(MockResponse().setResponseCode(400))
         server.enqueue(MockResponse().setResponseCode(200)
             .setBody(rawDiffResponse))
+        server.enqueue(MockResponse().setResponseCode(400))
+        server.enqueue(MockResponse().setResponseCode(200)
+            .setBody(rawDiffResponse))
         server.enqueue(MockResponse().setResponseCode(200)
             .setBody(compareResponse))
+
+        try {
+            gitHubUtil.getDiffOfCommit(owner, repo, "0000000", "0000001")
+            Assert.fail()
+        } catch (e: Exception) {
+            Assertions.assertThat(e).isInstanceOfAny(GithubAPICallError::class.java)
+        }
 
         try {
             gitHubUtil.getDiffOfCommit(owner, repo, "0000000", "0000001")
