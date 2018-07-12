@@ -11,7 +11,7 @@ import org.springframework.transaction.annotation.Transactional
 @RunWith(SpringRunner::class)
 @SpringBootTest(webEnvironment = RANDOM_PORT, classes = [MyCovTestApplication::class])
 @Transactional
-abstract class MyCovTest {
+abstract class MyCovTest : TestConstant {
 
     @Autowired
     lateinit var restTemplate: TestRestTemplate
