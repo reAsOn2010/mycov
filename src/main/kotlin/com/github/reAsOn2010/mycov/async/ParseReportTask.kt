@@ -19,7 +19,7 @@ class ParseReportTask(private val coverageStore: CoverageStore,
                 commit: String,
                 reportType: ReportType,
                 document: Document): CompletableFuture<Void> {
-        coverageStore.store(gitType, "$owner/$repo", reportType, commit, document)
+        coverageStore.store("$owner/$repo", gitType, reportType, commit, document)
         val record = coverageStore.get("$owner/$repo", gitType, reportType, commit)
         gitHubUtil.statusCoverageReport(owner, repo, commit, record.detail.commitOverview)
         try {

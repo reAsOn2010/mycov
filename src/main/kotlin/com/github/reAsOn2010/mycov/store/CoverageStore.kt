@@ -47,7 +47,7 @@ class CoverageStore(private val coverageRecordDao: CoverageRecordDao) {
         val baseOverview = baseRecord.detail.commitOverview
         val headRecord = coverageRecordDao.findByRepoNameAndHashAndGitTypeAndReportType(repoName, head, gitType, reportType)
                 ?: throw CoverageOfCommitNotFound(head)
-        val headOverview = baseRecord.detail.commitOverview
+        val headOverview = headRecord.detail.commitOverview
         return CoverageDiffReport(
             coverages = DiffTuple(calculateCoverage(baseOverview.line),
                 calculateCoverage(headOverview.line)),
@@ -77,8 +77,8 @@ class CoverageStore(private val coverageRecordDao: CoverageRecordDao) {
         return line.covered + line.partial + line.missed
     }
 
-    fun store(gitType: GitType,
-              repoName: String,
+    fun store(repoName: String,
+              gitType: GitType,
               reportType: ReportType,
               commit: String,
               report: Document) {
