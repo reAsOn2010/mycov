@@ -30,7 +30,7 @@ class ViewController(private val gitHubUtil: GitHubUtil,
 <!DOCTYPE html>
 <html>
 <head>
-<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/diff2html/2.4.0/diff2html.css">
+<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/diff2html/2.5.0/diff2html.css">
 <style type="text/css">
 .covered {
     background-color: #99ff99;
@@ -48,7 +48,7 @@ class ViewController(private val gitHubUtil: GitHubUtil,
 </head>
 <body>
 <div id="diff2html"></div>
-<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/diff2html/2.4.0/diff2html.min.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/diff2html/2.5.0/diff2html.min.js"></script>
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 <script>
 var diffHtml = Diff2Html.getPrettyHtml(

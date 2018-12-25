@@ -42,4 +42,4 @@ jobs:
       - run: gradle test jacocoTestReport
 
       # report to mycov
-      - run: 'curl -v -XPOST http://45.77.86.252:8080/report/github/reAsOn2010/mycov/`echo $CIRCLE_SHA1`/jacoco -H "Content-Type: text/xml" --data "@build/reports/jacoco/test/jacocoTestReport.xml"'
+      - run: 'curl -v -XPOST http://66.42.35.50:8080/report/github/reAsOn2010/mycov/`echo $CIRCLE_SHA1`/jacoco -H "Content-Type: text/xml" --data "@build/reports/jacoco/test/jacocoTestReport.xml"'
