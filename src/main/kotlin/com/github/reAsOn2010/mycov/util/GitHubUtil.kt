@@ -95,12 +95,12 @@ class GitHubUtil(private val baseURLConfig: BaseURLConfig) {
                 val createRequest = authenticatedBuilder
                     .post(RequestBody.create(JSON, JSONObject().put("body", comment).toString()))
                     .url("${baseURLConfig.github}/repos/$owner/$repo/issues/$pullRequestNumber/comments").build()
-                client.newCall(createRequest).execute()
+                client.newCall(createRequest).execute().close()
             } else {
                 val updateRequest = authenticatedBuilder
                     .post(RequestBody.create(JSON, JSONObject().put("body", comment).toString()))
                     .url("${baseURLConfig.github}/repos/$owner/$repo/issues/comments/${original.getInt("id")}").build()
-                client.newCall(updateRequest).execute()
+                client.newCall(updateRequest).execute().close()
             }
         }
     }
