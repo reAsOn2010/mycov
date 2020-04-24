@@ -1,9 +1,7 @@
-FROM openjdk:8-jdk-alpine
+FROM hub.c.163.com/patest/openjdk-node:11-jdk
 
 WORKDIR /app/mycov
 COPY build/libs/*.jar ./
-
-RUN ln -s /bin/sh /bin/bash
 
 CMD ["java", "-jar", "/app/mycov/mycov-1.0.jar"]
 
