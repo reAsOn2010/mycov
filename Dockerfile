@@ -1,4 +1,4 @@
-FROM adoptopenjdk:11-jdk-hotspot-bionic
+FROM adoptopenjdk/openjdk8:slim
 
 WORKDIR /app/mycov
 COPY build/libs/*.jar ./
