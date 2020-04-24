@@ -1,4 +1,4 @@
-FROM hub.c.163.com/patest/openjdk-node:11-jdk
+FROM adoptopenjdk:11-jdk-hotspot-bionic
 
 WORKDIR /app/mycov
 COPY build/libs/*.jar ./
