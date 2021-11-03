@@ -23,23 +23,13 @@ jobs:
     
     steps:
       - checkout
-
-      # Download and cache dependencies
-      - restore_cache:
-          keys:
-          - v1-dependencies-{{ checksum "build.gradle" }}
-          # fallback to using the latest cache if no exact match is found
-          - v1-dependencies-
-
-      - run: gradle dependencies
-
-      - save_cache:
-          paths:
-            - ~/.gradle
-          key: v1-dependencies-{{ checksum "build.gradle" }}
         
       # run tests!
-      - run: gradle test jacocoTestReport
+      - run: 
+          name: run test!
+          command: ./gradlew test jacocoTestReport
 
       # report to mycov
-      - run: 'curl -v -XPOST https://mycov.pat-edu.org/report/github/reAsOn2010/mycov/`echo $CIRCLE_SHA1`/jacoco -H "Content-Type: text/xml" --data "@build/reports/jacoco/test/jacocoTestReport.xml"'
+      - run: 
+          name: report to mycov
+          command: 'curl -v -XPOST https://mycov.pat-edu.org/report/github/reAsOn2010/mycov/`echo $CIRCLE_SHA1`/jacoco -H "Content-Type: text/xml" --data "@build/reports/jacoco/test/jacocoTestReport.xml"'
