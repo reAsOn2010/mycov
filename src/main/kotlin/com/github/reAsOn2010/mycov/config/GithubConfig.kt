@@ -4,10 +4,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.stereotype.Component
 
 @Component
-@ConfigurationProperties(prefix = "token")
-object TokenConfig {
-    class Github {
-        var token = ""
-    }
-    var github = Github()
+@ConfigurationProperties(prefix = "github")
+object GithubConfig {
+    var token = ""
 }

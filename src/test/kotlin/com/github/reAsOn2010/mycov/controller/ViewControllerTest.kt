@@ -5,7 +5,7 @@ import com.github.reAsOn2010.mycov.dao.CoverageRecordDao
 import com.github.reAsOn2010.mycov.model.CoverageFile
 import com.github.reAsOn2010.mycov.store.CoverageStore
 import com.github.reAsOn2010.mycov.util.GitHubUtil
-import com.nhaarman.mockito_kotlin.any
+import com.nhaarman.mockitokotlin2.any
 import org.junit.Test
 import org.mockito.Mockito
 import org.springframework.beans.factory.annotation.Autowired
