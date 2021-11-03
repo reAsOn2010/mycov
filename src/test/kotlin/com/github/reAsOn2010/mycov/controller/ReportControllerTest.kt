@@ -5,9 +5,8 @@ import com.github.reAsOn2010.mycov.dao.CoverageRecordDao
 import com.github.reAsOn2010.mycov.model.GitType.GITHUB
 import com.github.reAsOn2010.mycov.model.PullRequestNotFound
 import com.github.reAsOn2010.mycov.model.ReportType.JACOCO
-import com.github.reAsOn2010.mycov.store.CoverageStore
 import com.github.reAsOn2010.mycov.util.GitHubUtil
-import com.nhaarman.mockito_kotlin.*
+import com.nhaarman.mockitokotlin2.*
 import org.assertj.core.api.Assertions.assertThat
 import org.json.JSONObject
 import org.junit.Test

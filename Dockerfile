@@ -1,4 +1,4 @@
-FROM openjdk:8-jdk-alpine
+FROM adoptopenjdk:11-jre
 
 WORKDIR /app/mycov
 COPY build/libs/*.jar ./

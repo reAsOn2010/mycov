@@ -3,18 +3,20 @@ package com.github.reAsOn2010.mycov.util
 import com.github.reAsOn2010.mycov.config.*
 import com.github.reAsOn2010.mycov.model.*
 import okhttp3.*
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.*
 import org.springframework.stereotype.Component
 
 @Component
-class GitHubUtil(private val baseURLConfig: BaseURLConfig) {
-    companion object {
-        val client = OkHttpClient()
-        val authenticatedBuilder get() = Request.Builder()
-            .addHeader("Authorization", "token ${TokenConfig.github.token}")
-        val prefix = "MyCov coverage report"
-        val JSON = MediaType.parse("application/json; charset=utf-8")
-    }
+class GitHubUtil(private val githubConfig: GithubConfig,
+                 private val baseURLConfig: BaseURLConfig) {
+
+    val client = OkHttpClient()
+    val prefix = "MyCov coverage report"
+    val JSON = "application/json; charset=utf-8".toMediaType()
+    val authenticatedBuilder get() = Request.Builder()
+        .addHeader("Authorization", "token ${githubConfig.token}")
 
     fun getPullRequestBaseAndNumber(owner: String, repo: String, head: String): Pair<String, Int> {
         val request = authenticatedBuilder
@@ -22,9 +24,9 @@ class GitHubUtil(private val baseURLConfig: BaseURLConfig) {
         val response = client.newCall(request).execute()
         response.use {
             if (!response.isSuccessful) {
-                throw GithubAPICallError(request.url().toString())
+                throw GithubAPICallError(request.url.toString())
             }
-            val body = response.body()!!.string()
+            val body = response.body!!.string()
             val json = JSONArray(body).map { it as JSONObject }
             val targetPullRequest = json.firstOrNull { it.getJSONObject("head").getString("sha") == head }
             if (targetPullRequest == null) {
@@ -43,9 +45,9 @@ class GitHubUtil(private val baseURLConfig: BaseURLConfig) {
         val response = client.newCall(request).execute()
         response.use {
             if (!response.isSuccessful) {
-                throw GithubAPICallError(request.url().toString())
+                throw GithubAPICallError(request.url.toString())
             }
-            val body = response.body()!!.string()
+            val body = response.body!!.string()
             val json = JSONObject(body)
             val base = json.getJSONObject("base").getString("sha")
             val head = json.getJSONObject("head").getString("sha")
@@ -60,17 +62,17 @@ class GitHubUtil(private val baseURLConfig: BaseURLConfig) {
         val diffResponse = client.newCall(diffRequest).execute()
         diffResponse.use {
             if (!diffResponse.isSuccessful) {
-                throw GithubAPICallError(diffRequest.url().toString())
+                throw GithubAPICallError(diffRequest.url.toString())
             }
-            val diff = diffResponse.body()!!.string()
+            val diff = diffResponse.body!!.string()
             val changesRequest = authenticatedBuilder
                 .url("${baseURLConfig.github}/repos/$owner/$repo/compare/$base...$head").build()
             val changesResponse = client.newCall(changesRequest).execute()
             changesResponse.use {
                 if (!changesResponse.isSuccessful) {
-                    throw GithubAPICallError(diffRequest.url().toString())
+                    throw GithubAPICallError(diffRequest.url.toString())
                 }
-                val body = changesResponse.body()!!.string()
+                val body = changesResponse.body!!.string()
                 val json = JSONObject(body)
                 val changedFiles = json.getJSONArray("files").map { (it as JSONObject).getString("filename") }
                 return changedFiles to diff
@@ -85,20 +87,20 @@ class GitHubUtil(private val baseURLConfig: BaseURLConfig) {
         val response = client.newCall(listRequest).execute()
         response.use {
             if (!response.isSuccessful) {
-                throw GithubAPICallError(listRequest.url().toString())
+                throw GithubAPICallError(listRequest.url.toString())
             }
-            val body = response.body()!!.string()
+            val body = response.body!!.string()
             val json = JSONArray(body).map { it as JSONObject }
             val original = json.firstOrNull { it.getString("body").startsWith(prefix) }
             val comment = buildReportContent(owner, repo, gitType, reportType, base, pullRequestNumber, report)
             if (original == null) {
                 val createRequest = authenticatedBuilder
-                    .post(RequestBody.create(JSON, JSONObject().put("body", comment).toString()))
+                    .post(JSONObject().put("body", comment).toString().toRequestBody(JSON))
                     .url("${baseURLConfig.github}/repos/$owner/$repo/issues/$pullRequestNumber/comments").build()
                 client.newCall(createRequest).execute().close()
             } else {
                 val updateRequest = authenticatedBuilder
-                    .post(RequestBody.create(JSON, JSONObject().put("body", comment).toString()))
+                    .post(JSONObject().put("body", comment).toString().toRequestBody(JSON))
                     .url("${baseURLConfig.github}/repos/$owner/$repo/issues/comments/${original.getInt("id")}").build()
                 client.newCall(updateRequest).execute().close()
             }
@@ -112,7 +114,7 @@ class GitHubUtil(private val baseURLConfig: BaseURLConfig) {
             "description" to "Coverage of this commit is $percent",
             "context" to "ci/mycov")
         val request = authenticatedBuilder
-            .post(RequestBody.create(JSON, JSONObject(status).toString()))
+            .post(JSONObject(status).toString().toRequestBody(JSON))
             .url("${baseURLConfig.github}/repos/$owner/$repo/statuses/$head").build()
         client.newCall(request).execute().close()
     }
