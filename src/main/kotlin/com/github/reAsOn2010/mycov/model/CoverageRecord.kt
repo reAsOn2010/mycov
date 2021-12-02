@@ -29,7 +29,7 @@ class CoverageRecord(
     @get:Enumerated(EnumType.ORDINAL)
     var reportType: ReportType,
 
-    @get:Column(nullable = false, columnDefinition = "TEXT")
+    @get:Column(nullable = false, columnDefinition = "MEDIUMTEXT")
     @get:Convert(converter = CoverageCommitConverter::class)
     var detail: CoverageCommit
 ) {
