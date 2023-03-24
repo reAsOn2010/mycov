@@ -8,19 +8,20 @@ import org.springframework.core.convert.converter.Converter
 import org.springframework.format.support.FormattingConversionService
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurationSupport
 import java.io.InputStream
+import java.util.*
 
 @Configuration
 class WebMvcConfig: WebMvcConfigurationSupport() {
 
     class GitTypeConverter: Converter<String, GitType> {
         override fun convert(source: String): GitType {
-            return GitType.valueOf(source.toUpperCase())
+            return GitType.valueOf(source.uppercase())
         }
     }
 
     class ReportTypeConverter: Converter<String, ReportType> {
         override fun convert(source: String): ReportType {
-            return ReportType.valueOf(source.toUpperCase())
+            return ReportType.valueOf(source.uppercase())
         }
     }
 

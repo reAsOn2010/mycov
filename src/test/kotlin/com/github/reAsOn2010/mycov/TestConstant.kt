@@ -836,7 +836,7 @@ interface TestConstant {
     val rawDiffResponse get() = """
         some diff
     """.trimIndent()
-    val compareResponse get() = """
+    val githubFileResponse get() = """
 {
   "files": [
     {
@@ -854,7 +854,20 @@ interface TestConstant {
   ]
 }
     """.trimIndent()
-
+    val giteaFileResponse get() = """
+[
+    {
+      "filename": "file1.txt",
+      "status": "added",
+      "additions": 103,
+      "deletions": 21,
+      "changes": 124,
+      "html_url": "https://github.com/octocat/Hello-World/blob/6dcb09b5b57875f334f61aebed695e2e4193db5e/file1.txt",
+      "raw_url": "https://github.com/octocat/Hello-World/raw/6dcb09b5b57875f334f61aebed695e2e4193db5e/file1.txt",
+      "contents_url": "https://api.github.com/repos/octocat/Hello-World/contents/file1.txt?ref=6dcb09b5b57875f334f61aebed695e2e4193db5e",
+    }
+]
+    """.trimIndent()
     val coverageDiffReport get() = CoverageDiffReport(
         DiffTuple(80, 81),
         DiffTuple(0, 0),

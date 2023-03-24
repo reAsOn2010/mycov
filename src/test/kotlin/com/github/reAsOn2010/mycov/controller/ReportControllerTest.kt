@@ -79,7 +79,7 @@ class ReportControllerTest: MyCovTest() {
         val headJson = JSONObject(headResponse)
         assertThat(headJson.getString("status")).isEqualTo("ok")
 
-        verify(githubUtil, times(1)).commentCoverageReport(any(), any(), any(), any(), eq(base), eq(1), any())
+        verify(githubUtil, times(1)).commentCoverageReport(any(), any(), any(), eq(base), eq(1), any())
 
         assertThat(coverageRecordDao.findByRepoName("reAsOn2010/mycov")).isNotEmpty
         assertThat(coverageRecordDao.findByRepoNameAndHashAndGitTypeAndReportType("reAsOn2010/mycov", head, GITHUB, JACOCO)).isNotNull

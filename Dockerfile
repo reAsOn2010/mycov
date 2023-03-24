@@ -1,4 +1,4 @@
-FROM adoptopenjdk:11-jre
+FROM adoptopenjdk:17-jre
 
 WORKDIR /app/mycov
 COPY build/libs/*.jar ./

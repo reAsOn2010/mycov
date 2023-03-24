@@ -1,23 +1,24 @@
 package com.github.reAsOn2010.mycov.util
 
 import com.github.reAsOn2010.mycov.MyCovTest
-import com.github.reAsOn2010.mycov.config.BaseURLConfig
-import com.github.reAsOn2010.mycov.model.*
-import com.github.reAsOn2010.mycov.model.GitType.GITHUB
+import com.github.reAsOn2010.mycov.config.GithubConfig
+import com.github.reAsOn2010.mycov.model.GithubAPICallError
+import com.github.reAsOn2010.mycov.model.PullRequestNotFound
 import com.github.reAsOn2010.mycov.model.ReportType.JACOCO
-import okhttp3.mockwebserver.*
-import org.assertj.core.api.Assertions
+import okhttp3.mockwebserver.MockResponse
+import okhttp3.mockwebserver.MockWebServer
 import org.assertj.core.api.Assertions.assertThat
 import org.json.JSONObject
-import org.junit.*
+import org.junit.Assert
+import org.junit.Test
 import org.mockito.Mockito
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.mock.mockito.*
+import org.springframework.boot.test.mock.mockito.SpyBean
 
 class GitHubUtilTest: MyCovTest() {
 
     @SpyBean
-    lateinit var baseURLConfig: BaseURLConfig
+    lateinit var githubConfig: GithubConfig
 
     @Autowired
     lateinit var gitHubUtil: GitHubUtil
@@ -26,8 +27,8 @@ class GitHubUtilTest: MyCovTest() {
     fun getPullRequestBaseAndNumberTest() {
         val server = MockWebServer()
         val baseURL = server.url("")
-        Mockito.reset(baseURLConfig)
-        Mockito.`when`(baseURLConfig.github).thenReturn(baseURL.toString())
+        Mockito.reset(githubConfig)
+        Mockito.`when`(githubConfig.baseUrl).thenReturn(baseURL.toString())
 
         server.enqueue(MockResponse().setResponseCode(400))
         server.enqueue(MockResponse().setResponseCode(200)
@@ -39,14 +40,14 @@ class GitHubUtilTest: MyCovTest() {
             gitHubUtil.getPullRequestBaseAndNumber(owner, repo, "000001")
             Assert.fail()
         } catch (e: Exception) {
-            Assertions.assertThat(e).isInstanceOfAny(GithubAPICallError::class.java)
+            assertThat(e).isInstanceOfAny(GithubAPICallError::class.java)
         }
 
         try {
             gitHubUtil.getPullRequestBaseAndNumber(owner, repo, "0000001")
             Assert.fail()
         } catch (e: Exception) {
-            Assertions.assertThat(e).isInstanceOfAny(PullRequestNotFound::class.java)
+            assertThat(e).isInstanceOfAny(PullRequestNotFound::class.java)
         }
 
         val result = gitHubUtil.getPullRequestBaseAndNumber(owner, repo, "5bf1fd927dfb8679496a2e6cf00cbe50c1c87145")
@@ -59,8 +60,8 @@ class GitHubUtilTest: MyCovTest() {
     fun getPullRequestBaseAndHeadTest() {
         val server = MockWebServer()
         val baseURL = server.url("")
-        Mockito.reset(baseURLConfig)
-        Mockito.`when`(baseURLConfig.github).thenReturn(baseURL.toString())
+        Mockito.reset(githubConfig)
+        Mockito.`when`(githubConfig.baseUrl).thenReturn(baseURL.toString())
 
         server.enqueue(MockResponse().setResponseCode(400))
         server.enqueue(MockResponse().setResponseCode(200)
@@ -70,7 +71,7 @@ class GitHubUtilTest: MyCovTest() {
             gitHubUtil.getPullRequestBaseAndHead(owner, repo, 1)
             Assert.fail()
         } catch (e: Exception) {
-            Assertions.assertThat(e).isInstanceOfAny(GithubAPICallError::class.java)
+            assertThat(e).isInstanceOfAny(GithubAPICallError::class.java)
         }
 
         val result = gitHubUtil.getPullRequestBaseAndHead(owner, repo, 1)
@@ -83,9 +84,9 @@ class GitHubUtilTest: MyCovTest() {
     fun getDiffOfCommitTest() {
         val server = MockWebServer()
         val baseURL = server.url("")
-        Mockito.reset(baseURLConfig)
-        Mockito.`when`(baseURLConfig.github).thenReturn(baseURL.toString())
-        
+        Mockito.reset(githubConfig)
+        Mockito.`when`(githubConfig.baseUrl).thenReturn(baseURL.toString())
+
         server.enqueue(MockResponse().setResponseCode(400))
         server.enqueue(MockResponse().setResponseCode(200)
             .setBody(rawDiffResponse))
@@ -93,23 +94,23 @@ class GitHubUtilTest: MyCovTest() {
         server.enqueue(MockResponse().setResponseCode(200)
             .setBody(rawDiffResponse))
         server.enqueue(MockResponse().setResponseCode(200)
-            .setBody(compareResponse))
+            .setBody(githubFileResponse))
 
         try {
-            gitHubUtil.getDiffOfCommit(owner, repo, "0000000", "0000001")
+            gitHubUtil.getDiffOfCommit(owner, repo, 1)
             Assert.fail()
         } catch (e: Exception) {
-            Assertions.assertThat(e).isInstanceOfAny(GithubAPICallError::class.java)
+            assertThat(e).isInstanceOfAny(GithubAPICallError::class.java)
         }
 
         try {
-            gitHubUtil.getDiffOfCommit(owner, repo, "0000000", "0000001")
+            gitHubUtil.getDiffOfCommit(owner, repo, 1)
             Assert.fail()
         } catch (e: Exception) {
-            Assertions.assertThat(e).isInstanceOfAny(GithubAPICallError::class.java)
+            assertThat(e).isInstanceOfAny(GithubAPICallError::class.java)
         }
 
-        val response = gitHubUtil.getDiffOfCommit(owner, repo, "0000000", "0000001")
+        val response = gitHubUtil.getDiffOfCommit(owner, repo, 1)
         assertThat(response.first.size).isEqualTo(1)
         assertThat(response.first[0]).isEqualTo("file1.txt")
         assertThat(response.second).isEqualTo(rawDiffResponse)
@@ -122,8 +123,8 @@ class GitHubUtilTest: MyCovTest() {
         val server = MockWebServer()
         val baseURL = server.url("")
 
-        Mockito.reset(baseURLConfig)
-        Mockito.`when`(baseURLConfig.github).thenReturn(baseURL.toString())
+        Mockito.reset(githubConfig)
+        Mockito.`when`(githubConfig.baseUrl).thenReturn(baseURL.toString())
 
         server.enqueue(MockResponse().setResponseCode(400))
         server.enqueue(MockResponse().setResponseCode(200)
@@ -134,20 +135,20 @@ class GitHubUtilTest: MyCovTest() {
         server.enqueue(MockResponse().setResponseCode(200))
 
         try {
-            gitHubUtil.commentCoverageReport(owner, repo, GITHUB, JACOCO, "0000000", 10, coverageDiffReport)
+            gitHubUtil.commentCoverageReport(owner, repo, JACOCO, "0000000", 10, coverageDiffReport)
             Assert.fail()
         } catch (e: Exception) {
-            Assertions.assertThat(e).isInstanceOfAny(GithubAPICallError::class.java)
+            assertThat(e).isInstanceOfAny(GithubAPICallError::class.java)
         }
         server.takeRequest()
 
-        gitHubUtil.commentCoverageReport(owner, repo, GITHUB, JACOCO, "0000000", 10, coverageDiffReport)
+        gitHubUtil.commentCoverageReport(owner, repo, JACOCO, "0000000", 10, coverageDiffReport)
         server.takeRequest()
         val request = server.takeRequest()
         assertThat(request.method).isEqualTo("POST")
         assertThat(request.requestUrl.toString()).contains("/issues/10/comments")
 
-        gitHubUtil.commentCoverageReport(owner, repo, GITHUB, JACOCO, "0000000", 10, coverageDiffReport)
+        gitHubUtil.commentCoverageReport(owner, repo, JACOCO, "0000000", 10, coverageDiffReport)
         server.takeRequest()
         val request2 = server.takeRequest()
         assertThat(request2.method).isEqualTo("POST")
@@ -160,8 +161,8 @@ class GitHubUtilTest: MyCovTest() {
         val server = MockWebServer()
         val baseURL = server.url("")
 
-        Mockito.reset(baseURLConfig)
-        Mockito.`when`(baseURLConfig.github).thenReturn(baseURL.toString())
+        Mockito.reset(githubConfig)
+        Mockito.`when`(githubConfig.baseUrl).thenReturn(baseURL.toString())
 
         server.enqueue(MockResponse().setResponseCode(200))
         server.enqueue(MockResponse().setResponseCode(200))

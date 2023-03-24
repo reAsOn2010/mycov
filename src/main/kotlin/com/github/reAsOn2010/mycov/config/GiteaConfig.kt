@@ -4,8 +4,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.stereotype.Component
 
 @Component
-@ConfigurationProperties(prefix = "github")
-class GithubConfig {
-    var baseUrl = "https://api.github.com"
+@ConfigurationProperties(prefix = "gitea")
+class GiteaConfig {
+    var baseUrl = "https://gitea.your.host/api/v1/"
     var token = ""
 }

@@ -1,16 +1,15 @@
 package com.github.reAsOn2010.mycov.controller
 
 import com.github.reAsOn2010.mycov.model.*
-import com.github.reAsOn2010.mycov.model.ReportType.JACOCO
 import com.github.reAsOn2010.mycov.store.CoverageStore
-import com.github.reAsOn2010.mycov.util.GitHubUtil
+import com.github.reAsOn2010.mycov.util.Util
 import com.google.common.net.UrlEscapers
 import com.google.gson.Gson
 import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("/view")
-class ViewController(private val gitHubUtil: GitHubUtil,
+class ViewController(private val util: Util,
                      private val coverageStore: CoverageStore) {
 
     @RequestMapping(value = ["/{git_type}/{owner}/{repo}/{pullRequestNumber}/{report_type}"])
@@ -19,8 +18,8 @@ class ViewController(private val gitHubUtil: GitHubUtil,
              @PathVariable("repo") repo: String,
              @PathVariable("report_type") reportType: ReportType,
              @PathVariable("pullRequestNumber") pullRequestNumber: Int): String {
-        val (baseSha, headSha) = gitHubUtil.getPullRequestBaseAndHead(owner, repo, pullRequestNumber)
-        val (changedFiles, rawDiff) = gitHubUtil.getDiffOfCommit(owner, repo, baseSha, headSha)
+        val (baseSha, headSha) = util.get(gitType).getPullRequestBaseAndHead(owner, repo, pullRequestNumber)
+        val (changedFiles, rawDiff) = util.get(gitType).getDiffOfCommit(owner, repo, pullRequestNumber)
         val diff = UrlEscapers.urlPathSegmentEscaper().escape(rawDiff)
         val (baseCoverages, headCoverages) = coverageStore.getCoveragesForFiles(
             "$owner/$repo", gitType, reportType, baseSha, headSha, changedFiles)

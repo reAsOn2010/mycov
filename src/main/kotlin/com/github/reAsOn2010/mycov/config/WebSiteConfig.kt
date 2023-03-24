@@ -5,6 +5,6 @@ import org.springframework.stereotype.Component
 
 @Component
 @ConfigurationProperties(prefix = "website")
-object WebSiteConfig {
+class WebSiteConfig {
     var url: String = ""
 }
