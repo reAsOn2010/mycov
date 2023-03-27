@@ -46,4 +46,4 @@ jobs:
       # report to mycov
       - run:
           name: report to mycov
-          command: 'curl -v -XPOST https://mycov.dev.pat-edu.work/report/github/reAsOn2010/mycov/`echo $CIRCLE_SHA1`/jacoco -H "Content-Type: text/xml" --data "@build/reports/jacoco/test/jacocoTestReport.xml"'
+          command: 'curl -v -XPOST https://mycov.dev.pat-edu.work/report/gitea/reAsOn2010/mycov/`echo $CIRCLE_SHA1`/jacoco -H "Content-Type: text/xml" --data "@build/reports/jacoco/test/jacocoTestReport.xml"'

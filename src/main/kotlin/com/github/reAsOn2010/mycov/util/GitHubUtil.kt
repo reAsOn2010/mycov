@@ -59,24 +59,23 @@ class GitHubUtil(private val githubConfig: GithubConfig,
             .addHeader("Accept", "application/vnd.github.diff")
             .url("${githubConfig.baseUrl}/repos/$owner/$repo/pulls/$pullRequestNumber").build()
         val diffResponse = client.newCall(diffRequest).execute()
-        diffResponse.use {
+        val diff = diffResponse.use {
             if (!diffResponse.isSuccessful) {
                 throw GithubAPICallError(diffRequest.url.toString())
             }
-            val diff = diffResponse.body!!.string()
-            val changesRequest = authenticatedBuilder
-                .url("${githubConfig.baseUrl}/repos/$owner/$repo/pulls/$pullRequestNumber/files?per_page=100").build()
-            val changesResponse = client.newCall(changesRequest).execute()
-            changesResponse.use {
-                if (!changesResponse.isSuccessful) {
-                    throw GithubAPICallError(diffRequest.url.toString())
-                }
-                val body = changesResponse.body!!.string()
-                val json = JSONObject(body)
-                val changedFiles = json.getJSONArray("files").map { (it as JSONObject).getString("filename") }
-                return changedFiles to diff
-            }
+            diffResponse.body!!.string()
         }
+        val filesRequest = authenticatedBuilder
+                .url("${githubConfig.baseUrl}/repos/$owner/$repo/pulls/$pullRequestNumber/files?per_page=100").build()
+            val filesResponse = client.newCall(filesRequest).execute()
+        val files = filesResponse.use {
+            if (!filesResponse.isSuccessful) {
+                throw GithubAPICallError(diffRequest.url.toString())
+            }
+            val body = filesResponse.body!!.string()
+            JSONArray(body).map { (it as JSONObject).getString("filename") }
+        }
+        return files to diff
     }
 
     override fun commentCoverageReport(owner: String, repo: String, reportType: ReportType, base: String,
