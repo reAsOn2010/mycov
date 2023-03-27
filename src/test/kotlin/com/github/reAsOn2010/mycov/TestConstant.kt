@@ -837,8 +837,7 @@ interface TestConstant {
         some diff
     """.trimIndent()
     val githubFileResponse get() = """
-{
-  "files": [
+[
     {
       "sha": "bbcd538c8e72b8c175046e27cc8f907076331401",
       "filename": "file1.txt",
@@ -851,8 +850,7 @@ interface TestConstant {
       "contents_url": "https://api.github.com/repos/octocat/Hello-World/contents/file1.txt?ref=6dcb09b5b57875f334f61aebed695e2e4193db5e",
       "patch": "@@ -132,7 +132,7 @@ module Test @@ -1000,7 +1000,7 @@ module Test"
     }
-  ]
-}
+]
     """.trimIndent()
     val giteaFileResponse get() = """
 [
