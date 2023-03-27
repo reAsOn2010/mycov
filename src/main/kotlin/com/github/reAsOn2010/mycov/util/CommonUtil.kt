@@ -59,13 +59,13 @@ class CommonUtil(private val webSiteConfig: WebSiteConfig) {
             }
         }
         return """
-            $reportPrefix
-            [Link](${webSiteConfig.url}/view/${gitType.name.lowercase()}/$owner/$repo/$pullRequestNumber/${reportType.name.lowercase()})
+$reportPrefix
+[Link](${webSiteConfig.url}/view/${gitType.name.lowercase()}/$owner/$repo/$pullRequestNumber/${reportType.name.lowercase()})
 
-            ```diff
-            ${withPadding.joinToString("\n")}
-            ```
-        """.trimIndent()
+```diff
+${withPadding.joinToString("\n")}
+```
+""".trimIndent()
     }
 
     fun buildLine(signed: Boolean, reversed: Boolean, percentage: Boolean, name: String, diffTuple: DiffTuple): List<String> {
