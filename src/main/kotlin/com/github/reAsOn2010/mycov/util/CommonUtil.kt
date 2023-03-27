@@ -45,7 +45,7 @@ class CommonUtil(private val webSiteConfig: WebSiteConfig) {
         )
         val withPadding = lines.map {
             val line = it.mapIndexed { index, s ->
-                val padding = lines.map { it[index].length }.max()!!
+                val padding = lines.maxOf { line -> line[index].length }
                 if (index == 0) {
                     "%-${padding}s".format(s)
                 } else {
@@ -61,7 +61,7 @@ class CommonUtil(private val webSiteConfig: WebSiteConfig) {
         return """
             $reportPrefix
             [Link](${webSiteConfig.url}/view/${gitType.name.lowercase()}/$owner/$repo/$pullRequestNumber/${reportType.name.lowercase()})
-            
+
             ```diff
             ${withPadding.joinToString("\n")}
             ```

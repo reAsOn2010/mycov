@@ -33,7 +33,7 @@ class ViewControllerTest: MyCovTest() {
         Mockito.doReturn(emptyList<String>() to rawDiffResponse).`when`(githubUtil).getDiffOfCommit(any(), any(), any())
         Mockito.doReturn(emptyMap<String, CoverageFile>() to emptyMap<String, CoverageFile>())
             .`when`(coverageStore).getCoveragesForFiles(any(), any(), any(), any(), any(), any())
-        val response = restTemplate.getForObject("/view/github/reAsOn2010/mycov/1/jacoco", String::class.java)
+        restTemplate.getForObject("/view/github/reAsOn2010/mycov/1/jacoco", String::class.java)
     }
 
     @Test
@@ -44,6 +44,6 @@ class ViewControllerTest: MyCovTest() {
         Mockito.doReturn(emptyList<String>() to rawDiffResponse).`when`(giteaUtil).getDiffOfCommit(any(), any(), any())
         Mockito.doReturn(emptyMap<String, CoverageFile>() to emptyMap<String, CoverageFile>())
             .`when`(coverageStore).getCoveragesForFiles(any(), any(), any(), any(), any(), any())
-        val response = restTemplate.getForObject("/view/gitea/reAsOn2010/mycov/1/jacoco", String::class.java)
+        restTemplate.getForObject("/view/gitea/reAsOn2010/mycov/1/jacoco", String::class.java)
     }
 }

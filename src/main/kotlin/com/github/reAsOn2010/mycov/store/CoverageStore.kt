@@ -153,7 +153,9 @@ class CoverageStore(private val coverageRecordDao: CoverageRecordDao) {
             buildCoverageTuple(it)
         }
         // We consider partial covered as partial but not covered
-        val covered = tuples.sumOf { if (it.missedBranches == 0 && it.missedInstructions == 0) 1 as Int else 0 as Int }
+        val covered = tuples.sumOf {
+            if (it.missedBranches == 0 && it.missedInstructions == 0) 1 as Int else 0 as Int
+        }
         val partial = tuples.sumOf {
             if (it.coveredBranches > 0 && it.missedBranches > 0) 1 as Int else 0 as Int
         }
