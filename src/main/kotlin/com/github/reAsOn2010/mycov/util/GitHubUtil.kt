@@ -99,7 +99,7 @@ class GitHubUtil(private val githubConfig: GithubConfig,
             } else {
                 val updateRequest = authenticatedBuilder
                     .post(JSONObject().put("body", comment).toString().toRequestBody(JSON))
-                    .url("${githubConfig.baseUrl}/repos/$owner/$repo/issues/comments/${original.getInt("id")}").build()
+                    .url("${githubConfig.baseUrl}/repos/$owner/$repo/issues/comments/${original.getLong("id")}").build()
                 client.newCall(updateRequest).execute().close()
             }
         }
