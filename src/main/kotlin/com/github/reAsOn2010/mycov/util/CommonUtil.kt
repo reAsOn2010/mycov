@@ -7,6 +7,7 @@ import com.github.reAsOn2010.mycov.model.GitType
 import com.github.reAsOn2010.mycov.model.GitType.*
 import com.github.reAsOn2010.mycov.model.ReportType
 import org.springframework.stereotype.Component
+import java.time.Instant
 
 
 @Component
@@ -59,7 +60,7 @@ class CommonUtil(private val webSiteConfig: WebSiteConfig) {
             }
         }
         return """
-$reportPrefix
+$reportPrefix ${Instant.now()}
 [Link](${webSiteConfig.url}/view/${gitType.name.lowercase()}/$owner/$repo/$pullRequestNumber/${reportType.name.lowercase()})
 
 ```diff
